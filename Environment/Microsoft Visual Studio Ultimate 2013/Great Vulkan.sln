@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Console", "Projects\Other\Console\Console.vcxproj", "{097B4020-4455-4626-ADC9-A42F856E3E40}"
+	ProjectSection(ProjectDependencies) = postProject
+		{340D3A52-34AD-4F42-8510-3DB4C26F5055} = {340D3A52-34AD-4F42-8510-3DB4C26F5055}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other", "Other", "{EF1E9EA3-9295-4D80-B53A-EEA51BA510DF}"
 EndProject
