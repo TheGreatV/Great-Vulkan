@@ -1,0 +1,36 @@
+#pragma region Include
+
+#pragma once
+
+#include <array>
+#include <vector>
+#include <list>
+#include <map>
+#include <set>
+#include <initializer_list>
+
+#include "Header.hpp"
+#include "Size.hpp"
+
+#pragma endregion
+
+
+namespace GreatVulkan
+{
+	template<class Type_, Size size_>	using Array			= std::array<Type_, size_>;
+	template<class Type_>				using Vector		= std::vector<Type_>;
+	template<class Type_>				using List			= std::list<Type_>;
+	template<class Key_, class Value_>	using Map			= std::map<Key_, Value_>;
+	template<class Type_>				using Set			= std::set<Type_>;
+	template<class Type_>				using Initializer	= std::initializer_list<Type_>;
+}
+
+
+#pragma region GreatVulkan
+#pragma endregion
+
+
+#pragma region
+#pragma endregion
+
+

@@ -11,18 +11,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{097B4020-4455-4626-ADC9-A42F856E3E40}</ProjectGuid>
-    <RootNamespace>Console</RootNamespace>
+    <ProjectGuid>{F45C726C-0A1C-42F4-8548-02D21842C790}</ProjectGuid>
+    <RootNamespace>Vulkan</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -34,14 +34,12 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\Properties\Great Vulkan - Common Properties (Debug).props" />
-    <Import Project="..\..\..\Properties\Great Vulkan - Common - User.props" />
-    <Import Project="..\..\..\Properties\Great Vulkan - Vulkan - User.props" />
+    <Import Project="..\..\..\Properties\Great Vulkan - Vulkan.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\Properties\Great Vulkan - Common Properties (Release).props" />
-    <Import Project="..\..\..\Properties\Great Vulkan - Common - User.props" />
-    <Import Project="..\..\..\Properties\Great Vulkan - Vulkan - User.props" />
+    <Import Project="..\..\..\Properties\Great Vulkan - Vulkan.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -70,7 +68,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\Source Code\Other\Console\Source.cpp" />
+    <ClCompile Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Header.cpp" />
+    <ClCompile Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Vulkan.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Header.hpp" />
+    <ClInclude Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Vulkan.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
