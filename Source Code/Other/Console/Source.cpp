@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #define VK_USE_PLATFORM_WIN32_KHR 1
 
@@ -22,6 +23,11 @@ void func()
 	+		[7]	0x006489f8 "VK_LAYER_RENDERDOC_Capture"	const char *
 	*/
 	/*
+	+		[0]	0x0064b74c "VK_KHR_surface"	const char *
+	+		[1]	0x00651278 "VK_KHR_win32_surface"	const char *
+	+		[2]	0x0064e758 "VK_EXT_debug_report"	const char *
+	*/
+	/*
 	+		[0]	0x06c7bc70 "VK_LAYER_LUNARG_core_validation"	const char *
 	+		[1]	0x06c7bd18 "VK_LAYER_LUNARG_monitor"	const char *
 	+		[2]	0x06c7bdc0 "VK_LAYER_LUNARG_object_tracker"	const char *
@@ -31,6 +37,41 @@ void func()
 	+		[6]	0x06c7c098 "VK_LAYER_GOOGLE_unique_objects"	const char *
 	+		[7]	0x06c7c140 "VK_LAYER_RENDERDOC_Capture"	const char *
 	*/
+	/*
+	+		[0]	0x06d2d850 "VK_KHR_sampler_mirror_clamp_to_edge"	const char *
+	+		[1]	0x06d2d960 "VK_KHR_swapchain"	const char *
+	+		[2]	0x06d2da80 "VK_EXT_debug_marker"	const char *
+	*/
+
+	auto loadShader = [](const String& filename)
+	{
+		FILE* file = nullptr;
+
+		auto loadResult = fopen_s(&file, filename.c_str(), "rb");
+
+		if (loadResult != 0)
+		{
+			throw std::exception("failed to load file");
+		}
+
+		fseek(file, 0, FILE_END);
+		
+		auto size = ftell(file);
+		
+		if (size % 4 != 0)
+		{
+			throw Exception(); // TODO
+		}
+
+		rewind(file);
+
+		std::vector<uint32_t> result(size);
+		fread((void*)result.data(), 1, size, file);
+
+		fclose(file);
+
+		return Move(result);
+	};
 
 	VkExtent2D windowSize;
 	{
@@ -62,7 +103,12 @@ void func()
 			}
 		}
 
-		DWORD style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+		// DWORD style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+		DWORD style =
+			WS_OVERLAPPED |
+			WS_CAPTION |
+			WS_SYSMENU |
+			WS_VISIBLE;
 
 		RECT rect;
 		{
@@ -223,7 +269,6 @@ void func()
 	Vector<String> vk_instanceExtensionsNames;
 	Vector<const char*> vk_enabledInstanceExtensionsNames;
 	{
-#if _DEBUG
 		for (auto &vk_layerExtensionsProperties : vk_instanceLayersExtensionsProperties)
 		{
 			for (auto &vk_layerExtensionProperties : vk_layerExtensionsProperties.second)
@@ -241,7 +286,6 @@ void func()
 		{
 			vk_enabledInstanceExtensionsNames.push_back(vk_extensionName.data());
 		}
-#endif
 	}
 
 	VkApplicationInfo vk_applicationInfo;
@@ -436,7 +480,6 @@ void func()
 	Vector<String> vk_physicalDeviceExtensionsNames;
 	Vector<const char*> vk_enabledPhysicalDeviceExtensionsNames;
 	{
-#if _DEBUG
 		for (auto &vk_physicalDeviceExtensionsProperties : vk_physicalDeviceLayersExtensionsProperties)
 		{
 			for (auto &vk_physicalDeviceExtensionProperties : vk_physicalDeviceExtensionsProperties.second)
@@ -454,7 +497,6 @@ void func()
 		{
 			vk_enabledPhysicalDeviceExtensionsNames.push_back(vk_extensionName.data());
 		}
-#endif
 	}
 
 	uint32_t queueFamilyIndex = 0;
@@ -532,22 +574,27 @@ void func()
 		vk_physicalDeviceFeatures.variableMultisampleRate					= VK_FALSE;
 		vk_physicalDeviceFeatures.inheritedQueries							= VK_FALSE;
 	}
-	VkDeviceCreateInfo vk_deviceCreateInfo;
+	VkPhysicalDeviceMemoryProperties vk_physicalDeviceMemoryProperties;
 	{
-		vk_deviceCreateInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		vk_deviceCreateInfo.pNext					= nullptr;
-		vk_deviceCreateInfo.flags					= 0;
-		vk_deviceCreateInfo.queueCreateInfoCount	= vk_deviceQueueCreateInfos.size();
-		vk_deviceCreateInfo.pQueueCreateInfos		= vk_deviceQueueCreateInfos.data();
-		vk_deviceCreateInfo.enabledLayerCount		= vk_enabledPhysicalDeviceLayersNames.size();
-		vk_deviceCreateInfo.ppEnabledLayerNames		= vk_enabledPhysicalDeviceLayersNames.data();
-		vk_deviceCreateInfo.enabledExtensionCount	= vk_enabledPhysicalDeviceExtensionsNames.size();
-		vk_deviceCreateInfo.ppEnabledExtensionNames	= vk_enabledPhysicalDeviceExtensionsNames.data();
-		vk_deviceCreateInfo.pEnabledFeatures		= &vk_physicalDeviceFeatures;
+		vkGetPhysicalDeviceMemoryProperties(vk_physicalDevice, &vk_physicalDeviceMemoryProperties);
 	}
 
 	VkDevice vk_device;
 	{
+		VkDeviceCreateInfo vk_deviceCreateInfo;
+		{
+			vk_deviceCreateInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+			vk_deviceCreateInfo.pNext					= nullptr;
+			vk_deviceCreateInfo.flags					= 0;
+			vk_deviceCreateInfo.queueCreateInfoCount	= vk_deviceQueueCreateInfos.size();
+			vk_deviceCreateInfo.pQueueCreateInfos		= vk_deviceQueueCreateInfos.data();
+			vk_deviceCreateInfo.enabledLayerCount		= vk_enabledPhysicalDeviceLayersNames.size();
+			vk_deviceCreateInfo.ppEnabledLayerNames		= vk_enabledPhysicalDeviceLayersNames.data();
+			vk_deviceCreateInfo.enabledExtensionCount	= vk_enabledPhysicalDeviceExtensionsNames.size();
+			vk_deviceCreateInfo.ppEnabledExtensionNames	= vk_enabledPhysicalDeviceExtensionsNames.data();
+			vk_deviceCreateInfo.pEnabledFeatures		= &vk_physicalDeviceFeatures;
+		}
+		
 		if (auto result = Result(vkCreateDevice(vk_physicalDevice, &vk_deviceCreateInfo, nullptr, &vk_device)))
 		{
 			std::cout << "Device succesfully created!" << std::endl;
@@ -743,6 +790,96 @@ void func()
 		}
 	}
 
+	Vector<float> vertices = {
+		-0.5f, +0.5f,
+		+0.0f, -0.5f,
+		+0.5f, +0.5f,
+	};
+	Size verticesMemoryTotalSize = sizeof(float) * vertices.size();
+	VkBuffer vk_vertexBuffer;
+	{
+		VkBufferCreateInfo vk_bufferCreateInfo;
+		{
+			vk_bufferCreateInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			vk_bufferCreateInfo.pNext					= nullptr;
+			vk_bufferCreateInfo.flags					= 0;
+			vk_bufferCreateInfo.size					= verticesMemoryTotalSize;
+			vk_bufferCreateInfo.usage					= VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+			vk_bufferCreateInfo.sharingMode				= VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
+			vk_bufferCreateInfo.queueFamilyIndexCount	= 0;
+			vk_bufferCreateInfo.pQueueFamilyIndices		= nullptr;
+		}
+
+		if (auto result = Result(vkCreateBuffer(vk_device, &vk_bufferCreateInfo, nullptr, &vk_vertexBuffer)))
+		{
+			std::cout << "Vertex buffer succesfully created!" << std::endl;
+		}
+		else
+		{
+			throw Exception(); // TODO
+		}
+	}
+	VkDeviceMemory vk_vertexBufferDeviceMemory;
+	{
+		VkMemoryRequirements vk_memoryRequirements;
+		{
+			vkGetBufferMemoryRequirements(vk_device, vk_vertexBuffer, &vk_memoryRequirements);
+		}
+
+		VkMemoryAllocateInfo vk_memoryAllocateInfo;
+		{
+			vk_memoryAllocateInfo.sType				= VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			vk_memoryAllocateInfo.pNext				= nullptr;
+			vk_memoryAllocateInfo.allocationSize	= vk_memoryRequirements.size;
+			vk_memoryAllocateInfo.memoryTypeIndex	= [&](const VkMemoryPropertyFlags& properties) -> uint32_t
+			{
+				for (uint32_t i = 0; i < vk_physicalDeviceMemoryProperties.memoryTypeCount; ++i)
+				{
+					auto &memoryType = vk_physicalDeviceMemoryProperties.memoryTypes[i];
+
+					if ((memoryType.propertyFlags & properties) == properties)
+					{
+						return i;
+					}
+				}
+
+				throw Exception(); // TODO
+			}(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+		}
+
+		if (auto result = Result(vkAllocateMemory(vk_device, &vk_memoryAllocateInfo, nullptr, &vk_vertexBufferDeviceMemory)))
+		{
+			std::cout << "Vertex buffer memory succesfully allocated!" << std::endl;
+		}
+		else
+		{
+			throw Exception(); // TODO
+		}
+		
+		void* data;
+		if (auto result = Result(vkMapMemory(vk_device, vk_vertexBufferDeviceMemory, 0, verticesMemoryTotalSize, 0, &data)))
+		{
+			std::cout << "Memory successfully mapped!" << std::endl;
+		}
+		else
+		{
+			throw Exception(); // TODO
+		}
+
+		std::memcpy(data, vertices.data(), verticesMemoryTotalSize);
+
+		vkUnmapMemory(vk_device, vk_vertexBufferDeviceMemory);
+
+		if (auto result = Result(vkBindBufferMemory(vk_device, vk_vertexBuffer, vk_vertexBufferDeviceMemory, 0)))
+		{
+			std::cout << "Memory successfully binded to the buffer!" << std::endl;
+		}
+		else
+		{
+			throw Exception(); // TODO
+		}
+	}
+
 	VkRenderPass vk_renderPass;
 	{
 		Vector<VkAttachmentDescription> vk_attachmentDescriptions(1);
@@ -806,6 +943,306 @@ void func()
 			throw Exception();
 		}
 	}
+
+	VkShaderModule vk_vertexShaderModule;
+	{
+		auto source = loadShader("../../../../../Media/Shaders/Triangle Test/1.spir-v.vs");
+
+		VkShaderModuleCreateInfo vk_shaderModuleCreateInfo;
+		{
+			vk_shaderModuleCreateInfo.sType		= VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+			vk_shaderModuleCreateInfo.pNext		= nullptr;
+			vk_shaderModuleCreateInfo.flags		= 0;
+			vk_shaderModuleCreateInfo.codeSize	= source.size();
+			vk_shaderModuleCreateInfo.pCode		= source.data();
+		}
+
+		if (auto result = Result(vkCreateShaderModule(vk_device, &vk_shaderModuleCreateInfo, nullptr, &vk_vertexShaderModule)))
+		{
+			std::cout << "Vertex shader successfully created!" << std::endl;
+		}
+		else
+		{
+			throw Exception();
+		}
+	}
+	VkShaderModule vk_fragmentShaderModule;
+	{
+		auto source = loadShader("../../../../../Media/Shaders/Triangle Test/1.spir-v.fs");
+
+		VkShaderModuleCreateInfo vk_shaderModuleCreateInfo;
+		{
+			vk_shaderModuleCreateInfo.sType		= VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+			vk_shaderModuleCreateInfo.pNext		= nullptr;
+			vk_shaderModuleCreateInfo.flags		= 0;
+			vk_shaderModuleCreateInfo.codeSize	= source.size();
+			vk_shaderModuleCreateInfo.pCode		= source.data();
+		}
+
+		if (auto result = Result(vkCreateShaderModule(vk_device, &vk_shaderModuleCreateInfo, nullptr, &vk_fragmentShaderModule)))
+		{
+			std::cout << "Fragment shader successfully created!" << std::endl;
+		}
+		else
+		{
+			throw Exception();
+		}
+	}
+
+	VkPipelineLayout vk_pipelineLayout;
+	{
+		VkPipelineLayoutCreateInfo vk_pipelineLayoutCreateInfo;
+		{
+			vk_pipelineLayoutCreateInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+			vk_pipelineLayoutCreateInfo.pNext					= nullptr;
+			vk_pipelineLayoutCreateInfo.flags					= 0;
+			vk_pipelineLayoutCreateInfo.setLayoutCount			= 0;
+			vk_pipelineLayoutCreateInfo.pSetLayouts				= nullptr;
+			vk_pipelineLayoutCreateInfo.pushConstantRangeCount	= 0;
+			vk_pipelineLayoutCreateInfo.pPushConstantRanges		= nullptr;
+		}
+
+		if (auto result = Result(vkCreatePipelineLayout(vk_device, &vk_pipelineLayoutCreateInfo, nullptr, &vk_pipelineLayout)))
+		{
+			std::cout << "Pipeline layout successfully created!" << std::endl;
+		}
+		else
+		{
+			throw Exception(); // TODO
+		}
+	}
+	VkPipeline vk_pipeline;
+	{
+		Array<VkPipelineShaderStageCreateInfo, 2> vk_shaderStageCreateInfos;
+		{
+			vk_shaderStageCreateInfos[0];
+			{
+				vk_shaderStageCreateInfos[0].sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+				vk_shaderStageCreateInfos[0].pNext					= nullptr;
+				vk_shaderStageCreateInfos[0].flags					= 0;
+				vk_shaderStageCreateInfos[0].stage					= VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+				vk_shaderStageCreateInfos[0].module					= vk_vertexShaderModule;
+				vk_shaderStageCreateInfos[0].pName					= "main";
+				vk_shaderStageCreateInfos[0].pSpecializationInfo	= nullptr; // may be NULL
+			}
+			vk_shaderStageCreateInfos[1];
+			{
+				vk_shaderStageCreateInfos[1].sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+				vk_shaderStageCreateInfos[1].pNext					= nullptr;
+				vk_shaderStageCreateInfos[1].flags					= 0;
+				vk_shaderStageCreateInfos[1].stage					= VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+				vk_shaderStageCreateInfos[1].module					= vk_fragmentShaderModule;
+				vk_shaderStageCreateInfos[1].pName					= "main";
+				vk_shaderStageCreateInfos[1].pSpecializationInfo	= nullptr; // may be NULL
+			}
+		}
+		Array<VkVertexInputBindingDescription, 1> vk_vertexBindingDescriptions;
+		{
+			vk_vertexBindingDescriptions[0];
+			{
+				vk_vertexBindingDescriptions[0].binding		= 0;
+				vk_vertexBindingDescriptions[0].stride		= sizeof(float) * 2;
+				vk_vertexBindingDescriptions[0].inputRate	= VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
+			}
+		}
+		Array<VkVertexInputAttributeDescription, 1> vk_vertexAttributeDescriptions;
+		{
+			vk_vertexAttributeDescriptions[0];
+			{
+				vk_vertexAttributeDescriptions[0].location	= 0;
+				vk_vertexAttributeDescriptions[0].binding	= 0;
+				vk_vertexAttributeDescriptions[0].format	= VkFormat::VK_FORMAT_R32G32_SFLOAT;
+				vk_vertexAttributeDescriptions[0].offset	= 0;
+			}
+		}
+		VkPipelineVertexInputStateCreateInfo vk_vertexInputStateCreateInfo;
+		{
+			vk_vertexInputStateCreateInfo.sType								= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+			vk_vertexInputStateCreateInfo.pNext								= nullptr;
+			vk_vertexInputStateCreateInfo.flags								= 0;
+			vk_vertexInputStateCreateInfo.vertexBindingDescriptionCount		= vk_vertexBindingDescriptions.size();
+			vk_vertexInputStateCreateInfo.pVertexBindingDescriptions		= vk_vertexBindingDescriptions.data();
+			vk_vertexInputStateCreateInfo.vertexAttributeDescriptionCount	= vk_vertexAttributeDescriptions.size();
+			vk_vertexInputStateCreateInfo.pVertexAttributeDescriptions		= vk_vertexAttributeDescriptions.data();
+		}
+		VkPipelineInputAssemblyStateCreateInfo vk_inputAssemblyStateCreateInfo;
+		{
+			vk_inputAssemblyStateCreateInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+			vk_inputAssemblyStateCreateInfo.pNext					= nullptr;
+			vk_inputAssemblyStateCreateInfo.flags					= 0;
+			vk_inputAssemblyStateCreateInfo.topology				= VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+			vk_inputAssemblyStateCreateInfo.primitiveRestartEnable	= VK_FALSE;
+		}
+		Array<VkViewport, 1> vk_viewports;
+		{
+			vk_viewports[0];
+			{
+				vk_viewports[0].x			= 0;
+				vk_viewports[0].y			= 0;
+				vk_viewports[0].width		= static_cast<float>(vk_surfaceCapabilities.currentExtent.width);
+				vk_viewports[0].height		= static_cast<float>(vk_surfaceCapabilities.currentExtent.height);
+				vk_viewports[0].minDepth	= 0.0f;
+				vk_viewports[0].maxDepth	= 1.0f;
+			}
+		}
+		Array<VkRect2D, 1> vk_scissors;
+		{
+			vk_scissors[0];
+			{
+				vk_scissors[0].offset.x			= 0;
+				vk_scissors[0].offset.y			= 0;
+				vk_scissors[0].extent.width		= vk_surfaceCapabilities.currentExtent.width;
+				vk_scissors[0].extent.height	= vk_surfaceCapabilities.currentExtent.height;
+			}
+		}
+		VkPipelineViewportStateCreateInfo vk_viewportStateCreateInfo;
+		{
+			vk_viewportStateCreateInfo.sType			= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+			vk_viewportStateCreateInfo.pNext			= nullptr;
+			vk_viewportStateCreateInfo.flags			= 0;
+			vk_viewportStateCreateInfo.viewportCount	= vk_viewports.size();
+			vk_viewportStateCreateInfo.pViewports		= vk_viewports.data();
+			vk_viewportStateCreateInfo.scissorCount		= vk_scissors.size();
+			vk_viewportStateCreateInfo.pScissors		= vk_scissors.data();
+		}
+		VkPipelineRasterizationStateCreateInfo vk_rasterizationStateCreateInfo;
+		{
+			vk_rasterizationStateCreateInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+			vk_rasterizationStateCreateInfo.pNext					= nullptr;
+			vk_rasterizationStateCreateInfo.flags					= 0;
+			vk_rasterizationStateCreateInfo.depthClampEnable		= VK_FALSE;
+			vk_rasterizationStateCreateInfo.rasterizerDiscardEnable	= VK_FALSE;
+			vk_rasterizationStateCreateInfo.polygonMode				= VkPolygonMode::VK_POLYGON_MODE_FILL;
+			vk_rasterizationStateCreateInfo.cullMode				= VkCullModeFlagBits::VK_CULL_MODE_NONE;
+			vk_rasterizationStateCreateInfo.frontFace				= VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE;
+			vk_rasterizationStateCreateInfo.depthBiasEnable			= VK_FALSE;
+			vk_rasterizationStateCreateInfo.depthBiasConstantFactor	= 0.0f;
+			vk_rasterizationStateCreateInfo.depthBiasClamp			= 0.0f;
+			vk_rasterizationStateCreateInfo.depthBiasSlopeFactor	= 0.0f;
+			vk_rasterizationStateCreateInfo.lineWidth				= 1.0f;
+		}
+		VkPipelineMultisampleStateCreateInfo vk_multisampleStateCreateInfo;
+		{
+			vk_multisampleStateCreateInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+			vk_multisampleStateCreateInfo.pNext					= nullptr;
+			vk_multisampleStateCreateInfo.flags					= 0;
+			vk_multisampleStateCreateInfo.rasterizationSamples	= VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+			vk_multisampleStateCreateInfo.sampleShadingEnable	= VK_FALSE;
+			vk_multisampleStateCreateInfo.minSampleShading		= 0.0f;
+			vk_multisampleStateCreateInfo.pSampleMask			= nullptr;
+			vk_multisampleStateCreateInfo.alphaToCoverageEnable	= VK_FALSE;
+			vk_multisampleStateCreateInfo.alphaToOneEnable		= VK_FALSE;
+		}
+		VkStencilOpState stencilFront;
+		{
+			stencilFront.failOp			= VkStencilOp::VK_STENCIL_OP_KEEP;
+			stencilFront.passOp			= VkStencilOp::VK_STENCIL_OP_KEEP;
+			stencilFront.depthFailOp	= VkStencilOp::VK_STENCIL_OP_KEEP;
+			stencilFront.compareOp		= VkCompareOp::VK_COMPARE_OP_ALWAYS;
+			stencilFront.compareMask	= 0;
+			stencilFront.writeMask		= 0;
+			stencilFront.reference		= 0;
+		}
+		VkStencilOpState stencilBack;
+		{
+			stencilBack.failOp			= VkStencilOp::VK_STENCIL_OP_KEEP;
+			stencilBack.passOp			= VkStencilOp::VK_STENCIL_OP_KEEP;
+			stencilBack.depthFailOp		= VkStencilOp::VK_STENCIL_OP_KEEP;
+			stencilBack.compareOp		= VkCompareOp::VK_COMPARE_OP_ALWAYS;
+			stencilBack.compareMask		= 0;
+			stencilBack.writeMask		= 0;
+			stencilBack.reference		= 0;
+		}
+		VkPipelineDepthStencilStateCreateInfo vk_depthStencilStateCreateInfo;
+		{
+			vk_depthStencilStateCreateInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+			vk_depthStencilStateCreateInfo.pNext					= nullptr;
+			vk_depthStencilStateCreateInfo.flags					= 0;
+			vk_depthStencilStateCreateInfo.depthTestEnable			= VK_FALSE;
+			vk_depthStencilStateCreateInfo.depthWriteEnable			= VK_FALSE;
+			vk_depthStencilStateCreateInfo.depthCompareOp			= VkCompareOp::VK_COMPARE_OP_ALWAYS;
+			vk_depthStencilStateCreateInfo.depthBoundsTestEnable	= VK_FALSE;
+			vk_depthStencilStateCreateInfo.stencilTestEnable		= VK_FALSE;
+			vk_depthStencilStateCreateInfo.front					= stencilFront;
+			vk_depthStencilStateCreateInfo.back						= stencilBack;
+			vk_depthStencilStateCreateInfo.minDepthBounds			= 0.0f;
+			vk_depthStencilStateCreateInfo.maxDepthBounds			= 0.0f;
+		}
+		Array<VkPipelineColorBlendAttachmentState, 1> vk_colorBlendAttachmentStates;
+		{
+			vk_colorBlendAttachmentStates[0];
+			{
+				vk_colorBlendAttachmentStates[0].blendEnable			= VK_FALSE;
+				vk_colorBlendAttachmentStates[0].srcColorBlendFactor	= VkBlendFactor::VK_BLEND_FACTOR_ONE;
+				vk_colorBlendAttachmentStates[0].dstColorBlendFactor	= VkBlendFactor::VK_BLEND_FACTOR_ONE;
+				vk_colorBlendAttachmentStates[0].colorBlendOp			= VkBlendOp::VK_BLEND_OP_ADD;
+				vk_colorBlendAttachmentStates[0].srcAlphaBlendFactor	= VkBlendFactor::VK_BLEND_FACTOR_ONE;
+				vk_colorBlendAttachmentStates[0].dstAlphaBlendFactor	= VkBlendFactor::VK_BLEND_FACTOR_ONE;
+				vk_colorBlendAttachmentStates[0].alphaBlendOp			= VkBlendOp::VK_BLEND_OP_ADD;
+				vk_colorBlendAttachmentStates[0].colorWriteMask			=
+					VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT |
+					VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT |
+					VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT;
+			}
+		}
+		VkPipelineColorBlendStateCreateInfo vk_pipelineColorBlendStateCreateInfo;
+		{
+			vk_pipelineColorBlendStateCreateInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+			vk_pipelineColorBlendStateCreateInfo.pNext					= nullptr;
+			vk_pipelineColorBlendStateCreateInfo.flags					= 0;
+			vk_pipelineColorBlendStateCreateInfo.logicOpEnable			= VK_FALSE;
+			vk_pipelineColorBlendStateCreateInfo.logicOp				= VkLogicOp::VK_LOGIC_OP_CLEAR;
+			vk_pipelineColorBlendStateCreateInfo.attachmentCount		= vk_colorBlendAttachmentStates.size();
+			vk_pipelineColorBlendStateCreateInfo.pAttachments			= vk_colorBlendAttachmentStates.data();
+			vk_pipelineColorBlendStateCreateInfo.blendConstants;
+			{
+				vk_pipelineColorBlendStateCreateInfo.blendConstants[0]	= 0.0f;
+				vk_pipelineColorBlendStateCreateInfo.blendConstants[1]	= 0.0f;
+				vk_pipelineColorBlendStateCreateInfo.blendConstants[2]	= 0.0f;
+				vk_pipelineColorBlendStateCreateInfo.blendConstants[3]	= 0.0f;
+			}
+		}
+		VkGraphicsPipelineCreateInfo vk_graphicsPipelineCreateInfo;
+		{
+			vk_graphicsPipelineCreateInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+			vk_graphicsPipelineCreateInfo.pNext					= nullptr;
+			vk_graphicsPipelineCreateInfo.flags					= 0;
+			vk_graphicsPipelineCreateInfo.stageCount			= vk_shaderStageCreateInfos.size();
+			vk_graphicsPipelineCreateInfo.pStages				= vk_shaderStageCreateInfos.data();
+			vk_graphicsPipelineCreateInfo.pVertexInputState		= &vk_vertexInputStateCreateInfo;
+			vk_graphicsPipelineCreateInfo.pInputAssemblyState	= &vk_inputAssemblyStateCreateInfo;
+			vk_graphicsPipelineCreateInfo.pTessellationState	= nullptr;
+			vk_graphicsPipelineCreateInfo.pViewportState		= &vk_viewportStateCreateInfo;
+			vk_graphicsPipelineCreateInfo.pRasterizationState	= &vk_rasterizationStateCreateInfo;
+			vk_graphicsPipelineCreateInfo.pMultisampleState		= &vk_multisampleStateCreateInfo;
+			vk_graphicsPipelineCreateInfo.pDepthStencilState	= &vk_depthStencilStateCreateInfo;
+			vk_graphicsPipelineCreateInfo.pColorBlendState		= &vk_pipelineColorBlendStateCreateInfo;
+			vk_graphicsPipelineCreateInfo.pDynamicState			= nullptr;
+			vk_graphicsPipelineCreateInfo.layout				= vk_pipelineLayout;
+			vk_graphicsPipelineCreateInfo.renderPass			= vk_renderPass;
+			vk_graphicsPipelineCreateInfo.subpass				= 0;
+			vk_graphicsPipelineCreateInfo.basePipelineHandle	= VK_NULL_HANDLE;
+			vk_graphicsPipelineCreateInfo.basePipelineIndex		= -1;
+		}
+
+		if (auto result = Result(vkCreateGraphicsPipelines(
+			vk_device,
+			VK_NULL_HANDLE, // may be NULL
+			1, &vk_graphicsPipelineCreateInfo,
+			nullptr,
+			&vk_pipeline
+		)))
+		{
+			std::cout << "Pipeline successfully created!" << std::endl;
+		}
+		else
+		{
+			throw Exception(); // TODO
+		}
+	}
+
+	vkDestroyShaderModule(vk_device, vk_vertexShaderModule, nullptr);
+	vkDestroyShaderModule(vk_device, vk_fragmentShaderModule, nullptr);
 
 	VkQueue vk_queue = VK_NULL_HANDLE;
 	{
@@ -948,6 +1385,14 @@ void func()
 			}
 
 			vkCmdBeginRenderPass(vk_commandBuffer, &vk_renderPassBeginInfo, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+
+			vkCmdBindPipeline(vk_commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
+
+			VkDeviceSize offset = 0;
+			vkCmdBindVertexBuffers(vk_commandBuffer, 0, 1, &vk_vertexBuffer, &offset);
+
+			vkCmdDraw(vk_commandBuffer, 3, 1, 0, 0);
+
 			vkCmdEndRenderPass(vk_commandBuffer);
 
 			if (auto result = Result(vkEndCommandBuffer(vk_commandBuffer)))
@@ -1070,8 +1515,14 @@ void func()
 		{
 			throw Exception(); // TODO
 		}
+
+		break;
 	}
 
+	vkDestroyPipeline(vk_device, vk_pipeline, nullptr);
+	vkDestroyPipelineLayout(vk_device, vk_pipelineLayout, nullptr);
+	vkDestroyBuffer(vk_device, vk_vertexBuffer, nullptr);
+	vkFreeMemory(vk_device, vk_vertexBufferDeviceMemory, nullptr);
 	for (auto &vk_framebuffer : vk_framebuffers)
 	{
 		vkDestroyFramebuffer(vk_device, vk_framebuffer, nullptr);
@@ -1088,11 +1539,13 @@ void func()
 	vkDestroySurfaceKHR(vk_instance, vk_surface, nullptr);
 	vkDestroyDevice(vk_device, nullptr);
 	vkDestroyInstance(vk_instance, nullptr);
+
+	DestroyWindow(handleWindow);
 }
 
 void main()
 {
 	func();
 
-	// std::system("pause");
+	std::system("pause");
 }
