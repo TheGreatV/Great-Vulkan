@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Header.hpp"
+#include "Functions.hpp"
 
 #pragma endregion
 
