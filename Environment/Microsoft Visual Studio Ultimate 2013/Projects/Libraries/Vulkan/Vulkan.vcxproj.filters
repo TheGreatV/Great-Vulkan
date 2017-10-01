@@ -21,12 +21,18 @@
     <ClCompile Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Vulkan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Functions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Header.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Vulkan.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Functions.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

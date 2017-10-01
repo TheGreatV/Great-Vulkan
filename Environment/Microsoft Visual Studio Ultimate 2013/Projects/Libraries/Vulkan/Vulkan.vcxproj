@@ -68,10 +68,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Functions.cpp" />
     <ClCompile Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Header.cpp" />
     <ClCompile Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Vulkan.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Functions.hpp" />
     <ClInclude Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Header.hpp" />
     <ClInclude Include="..\..\..\..\..\Source Code\Libraries\Vulkan\Vulkan.hpp" />
   </ItemGroup>
