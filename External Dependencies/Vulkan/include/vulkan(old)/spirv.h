@@ -51,11 +51,11 @@
 typedef unsigned int SpvId;
 
 #define SPV_VERSION 0x10100
-#define SPV_REVISION 8
+#define SPV_REVISION 7
 
 static const unsigned int SpvMagicNumber = 0x07230203;
 static const unsigned int SpvVersion = 0x00010100;
-static const unsigned int SpvRevision = 8;
+static const unsigned int SpvRevision = 7;
 static const unsigned int SpvOpCodeMask = 0xffff;
 static const unsigned int SpvWordCountShift = 16;
 
@@ -131,7 +131,6 @@ typedef enum SpvExecutionMode_ {
     SpvExecutionModeSubgroupSize = 35,
     SpvExecutionModeSubgroupsPerWorkgroup = 36,
     SpvExecutionModePostDepthCoverage = 4446,
-    SpvExecutionModeStencilRefReplacingEXT = 5027,
     SpvExecutionModeMax = 0x7fffffff,
 } SpvExecutionMode;
 
@@ -454,7 +453,6 @@ typedef enum SpvBuiltIn_ {
     SpvBuiltInBaryCoordSmoothCentroidAMD = 4996,
     SpvBuiltInBaryCoordSmoothSampleAMD = 4997,
     SpvBuiltInBaryCoordPullModelAMD = 4998,
-    SpvBuiltInFragStencilRefEXT = 5014,
     SpvBuiltInViewportMaskNV = 5253,
     SpvBuiltInSecondaryPositionNV = 5257,
     SpvBuiltInSecondaryViewportMaskNV = 5258,
@@ -658,11 +656,8 @@ typedef enum SpvCapability_ {
     SpvCapabilityAtomicStorageOps = 4445,
     SpvCapabilitySampleMaskPostDepthCoverage = 4447,
     SpvCapabilityImageGatherBiasLodAMD = 5009,
-    SpvCapabilityStencilExportEXT = 5013,
-    SpvCapabilityImageReadWriteLodAMD = 5015,
     SpvCapabilitySampleMaskOverrideCoverageNV = 5249,
     SpvCapabilityGeometryShaderPassthroughNV = 5251,
-    SpvCapabilityShaderViewportIndexLayerEXT = 5254,
     SpvCapabilityShaderViewportIndexLayerNV = 5254,
     SpvCapabilityShaderViewportMaskNV = 5255,
     SpvCapabilityShaderStereoViewNV = 5259,
