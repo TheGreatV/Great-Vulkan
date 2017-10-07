@@ -133,6 +133,104 @@ namespace GreatVulkan
 	public:
 		inline PhysicalDeviceFeatures& operator = (const PhysicalDeviceFeatures&) = delete;
 	};
+	class RenderPassCreateInfo:
+		public VkRenderPassCreateInfo
+	{
+	public:
+		inline RenderPassCreateInfo() = delete;
+		inline RenderPassCreateInfo(const Vector<VkAttachmentDescription>& vk_attachmentDescriptions_, const Vector<VkSubpassDescription>& vk_subpassDescriptions_, const Vector<VkSubpassDependency>& vk_subpassDependencies_ = Vector<VkSubpassDependency>());
+		inline RenderPassCreateInfo(const RenderPassCreateInfo&) = delete;
+		inline ~RenderPassCreateInfo() = default;
+	public:
+		inline RenderPassCreateInfo& operator = (const RenderPassCreateInfo&) = delete;
+	};
+	class CommandPoolCreateInfo:
+		public VkCommandPoolCreateInfo
+	{
+	public:
+		inline CommandPoolCreateInfo() = delete;
+		inline CommandPoolCreateInfo(const VkCommandPoolCreateFlags& flags_, const decltype(queueFamilyIndex)& queueFamilyIndex_);
+		inline CommandPoolCreateInfo(const CommandPoolCreateInfo&) = delete;
+		inline ~CommandPoolCreateInfo() = default;
+	public:
+		inline CommandPoolCreateInfo& operator = (const CommandPoolCreateInfo&) = delete;
+	};
+	
+	class CommandBufferAllocateInfo:
+		public VkCommandBufferAllocateInfo
+	{
+	public:
+		inline CommandBufferAllocateInfo() = delete;
+		inline CommandBufferAllocateInfo(const VkCommandPool& vk_commandPool_, const VkCommandBufferLevel& level_, const decltype(commandBufferCount)& commandBufferCount_);
+		inline CommandBufferAllocateInfo(const CommandBufferAllocateInfo&) = delete;
+		inline ~CommandBufferAllocateInfo() = default;
+	public:
+		inline CommandBufferAllocateInfo& operator = (const CommandBufferAllocateInfo&) = delete;
+	};
+
+	class CommandBufferBeginInfo:
+		public VkCommandBufferBeginInfo
+	{
+	public:
+		inline CommandBufferBeginInfo() = delete;
+		inline CommandBufferBeginInfo(const VkCommandBufferUsageFlags& flags_, const VkCommandBufferInheritanceInfo& inheritanceInfo_);
+		inline CommandBufferBeginInfo(const VkCommandBufferUsageFlags& flags_, const VkCommandBufferInheritanceInfo* inheritanceInfo_ = nullptr);
+		inline CommandBufferBeginInfo(const CommandBufferBeginInfo&) = delete;
+		inline ~CommandBufferBeginInfo() = default;
+	public:
+		inline CommandBufferBeginInfo& operator = (const CommandBufferBeginInfo&) = delete;
+	};
+
+	class AttachmentDescription:
+		public VkAttachmentDescription
+	{
+	public:
+		inline AttachmentDescription() = delete;
+		inline AttachmentDescription( // TODO: add flags
+			const VkFormat& format_,
+			const VkSampleCountFlagBits& samples_,
+			const VkAttachmentLoadOp& loadOp_,
+			const VkAttachmentStoreOp& storeOp_,
+			const VkAttachmentLoadOp& stencilLoadOp_,
+			const VkAttachmentStoreOp& stencilStoreOp_,
+			const VkImageLayout& initialLayout_,
+			const VkImageLayout& finalLayout_
+		);
+		inline AttachmentDescription(const AttachmentDescription&) = delete;
+		inline ~AttachmentDescription() = default;
+	public:
+		inline AttachmentDescription& operator = (const AttachmentDescription&) = delete;
+	};
+	class AttachmentReference:
+		public VkAttachmentReference
+	{
+	public:
+		inline AttachmentReference() = delete;
+		inline AttachmentReference(const decltype(attachment)& attachment_, const VkImageLayout& layout_);
+		inline AttachmentReference(const AttachmentReference&) = delete;
+		inline ~AttachmentReference() = default;
+	public:
+		inline AttachmentReference& operator = (const AttachmentReference&) = delete;
+	};
+	class SubpassDescription:
+		public VkSubpassDescription
+	{
+	public:
+		inline SubpassDescription() = delete;
+		inline SubpassDescription(const VkPipelineBindPoint& pipelineBindPoint_, const Vector<VkAttachmentReference>& colorAttachments_);
+		inline SubpassDescription(
+			const VkPipelineBindPoint& pipelineBindPoint_,
+			const Vector<VkAttachmentReference>& inputAttachments_,
+			const Vector<VkAttachmentReference>& colorAttachments_,
+			const Vector<VkAttachmentReference>& resolveAttachments_,
+			const VkAttachmentReference* depthStencilAttachment_,
+			const Vector<uint32_t>& preserveAttachments_
+		);
+		inline SubpassDescription(const SubpassDescription&) = delete;
+		inline ~SubpassDescription() = default;
+	public:
+		inline SubpassDescription& operator = (const SubpassDescription&) = delete;
+	};
 
 #if VK_USE_PLATFORM_WIN32_KHR
 	class Win32SurfaceCreateInfoKHR:
@@ -173,16 +271,39 @@ namespace GreatVulkan
 	inline VkDevice CreateDevice(const VkPhysicalDevice& vk_physicalDevice_, const VkDeviceCreateInfo& vk_deviceCreateInfo_);
 	inline void DestroyDevice(const VkDevice& vk_device_);
 
-#if VK_USE_PLATFORM_WIN32_KHR
 	// Win32SurfaceKHR
+#if VK_USE_PLATFORM_WIN32_KHR
 	inline VkBool32 GetPhysicalDeviceWin32PresentationSupportKHR(const VkPhysicalDevice& vk_physicalDevice_, const Size& queueFamilyIndex_);
 	inline VkSurfaceKHR CreateWin32SurfaceKHR(const VkInstance& vk_instance_, const VkWin32SurfaceCreateInfoKHR& vk_win32SurfaceCreateInfo_);
 	inline VkBool32 GetPhysicalDeviceSurfaceSupportKHR(const VkPhysicalDevice& vk_physicalDevice_, const decltype(VkDeviceQueueCreateInfo::queueFamilyIndex)& vk_queueFamilyIndex_, const VkSurfaceKHR& vk_surface_);
 	inline VkSurfaceCapabilitiesKHR GetPhysicalDeviceSurfaceCapabilitiesKHR(const VkPhysicalDevice& vk_physicalDevice_, const VkSurfaceKHR& vk_surface_);
 	inline Vector<VkSurfaceFormatKHR> GetPhysicalDeviceSurfaceFormatsKHR(const VkPhysicalDevice& vk_physicalDevice_, const VkSurfaceKHR& vk_surface_);
+	inline void DestroySurfaceKHR(const VkInstance& vk_instance_, const VkSurfaceKHR& vk_surface_);
 #endif
+
+	// Queue
+	inline VkQueue GetDeviceQueue(const VkDevice& vk_device_, const uint32_t& vk_queueFamilyIndex_, const uint32_t& vk_queueIndex_);
+
+	// RenderPass
+	inline VkRenderPass CreateRenderPass(const VkDevice& vk_device_, const VkRenderPassCreateInfo& vk_renderPassCreateInfo_);
+	inline void DestroyRenderPass(const VkDevice& vk_device_, const VkRenderPass& vk_renderPass_);
+
+	// Command Pool
+	inline VkCommandPool CreateCommandPool(const VkDevice& vk_device_, const VkCommandPoolCreateInfo &vk_commandPoolCreateInfo_);
+	inline void ResetCommandPool(const VkDevice& vk_device_, const VkCommandPool& vk_commandPool_, const VkCommandPoolResetFlags& flags_);
+	inline void DestroyCommandPool(const VkDevice& vk_device_, const VkCommandPool& vk_commandPool_);
+
+	// Command Buffer
+	inline Vector<VkCommandBuffer> AllocateCommandBuffers(const VkDevice& vk_device_, const VkCommandBufferAllocateInfo& vk_commandBufferAllocateInfo_); // TODO: allocate single buffer
+	inline void ResetCommandBuffer(const VkCommandBuffer& vk_commandBuffer_, const VkCommandBufferResetFlags& flags_);
+	inline void BeginCommandBuffer(const VkCommandBuffer& vk_commandBuffer_, const VkCommandBufferBeginInfo& vk_commandBufferBeginInfo_);
+	inline void EndCommandBuffer(const VkCommandBuffer& vk_commandBuffer_);
+	inline void FreeCommandBuffers(const VkDevice& vk_device_, const VkCommandPool& vk_commandPool_, const Vector<VkCommandBuffer>& vk_commandBuffers_); // TODO: free single buffer
 }
 
+
+#pragma region
+#pragma endregion
 
 #pragma region GreatVulkan
 
@@ -351,6 +472,129 @@ inline GreatVulkan::Win32SurfaceCreateInfoKHR::Win32SurfaceCreateInfoKHR(const d
 #endif
 
 #pragma endregion
+
+#pragma region RenderPassCreateInfo
+
+inline GreatVulkan::RenderPassCreateInfo::RenderPassCreateInfo(const Vector<VkAttachmentDescription>& vk_attachmentDescriptions_, const Vector<VkSubpassDescription>& vk_subpassDescriptions_, const Vector<VkSubpassDependency>& vk_subpassDependencies_)
+{
+	sType			= VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	pNext			= nullptr;
+	flags			= 0;
+	attachmentCount	= vk_attachmentDescriptions_.size();
+	pAttachments	= vk_attachmentDescriptions_.data();
+	subpassCount	= vk_subpassDescriptions_.size();
+	pSubpasses		= vk_subpassDescriptions_.data();
+	dependencyCount	= vk_subpassDependencies_.size();
+	pDependencies	= vk_subpassDependencies_.data();
+}
+
+#pragma endregion
+
+#pragma region RenderPassCreateInfo
+
+inline GreatVulkan::CommandPoolCreateInfo::CommandPoolCreateInfo(const VkCommandPoolCreateFlags& flags_, const decltype(queueFamilyIndex)& queueFamilyIndex_)
+{
+	sType				= VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	pNext				= nullptr;
+	flags				= flags_;
+	queueFamilyIndex	= queueFamilyIndex_;
+}
+
+#pragma endregion
+
+#pragma region RenderPassCreateInfo
+
+inline GreatVulkan::CommandBufferAllocateInfo::CommandBufferAllocateInfo(const VkCommandPool& vk_commandPool_, const VkCommandBufferLevel& level_, const decltype(commandBufferCount)& commandBufferCount_)
+{
+	sType				= VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	pNext				= nullptr;
+	commandPool			= vk_commandPool_;
+	level				= level_;
+	commandBufferCount	= commandBufferCount_;
+}
+
+#pragma endregion
+
+#pragma region RenderPassCreateInfo
+
+inline GreatVulkan::CommandBufferBeginInfo::CommandBufferBeginInfo(const VkCommandBufferUsageFlags& flags_, const VkCommandBufferInheritanceInfo& inheritanceInfo_):
+	CommandBufferBeginInfo(flags_, &inheritanceInfo_)
+{
+}
+inline GreatVulkan::CommandBufferBeginInfo::CommandBufferBeginInfo(const VkCommandBufferUsageFlags& flags_, const VkCommandBufferInheritanceInfo* inheritanceInfo_)
+{
+	sType				= VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	pNext				= nullptr;
+	flags				= flags_;
+	pInheritanceInfo	= inheritanceInfo_;
+}
+
+#pragma endregion
+
+#pragma region AttachmentDescription
+
+inline GreatVulkan::AttachmentDescription::AttachmentDescription(
+	const VkFormat& format_,
+	const VkSampleCountFlagBits& samples_,
+	const VkAttachmentLoadOp& loadOp_,
+	const VkAttachmentStoreOp& storeOp_,
+	const VkAttachmentLoadOp& stencilLoadOp_,
+	const VkAttachmentStoreOp& stencilStoreOp_,
+	const VkImageLayout& initialLayout_,
+	const VkImageLayout& finalLayout_
+) {
+	flags			= 0; // VkAttachmentDescriptionFlagBits::VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT;
+	format			= format_;
+	samples			= samples_;
+	loadOp			= loadOp_;
+	storeOp			= storeOp_;
+	stencilLoadOp	= stencilLoadOp_;
+	stencilStoreOp	= stencilStoreOp_;
+	initialLayout	= initialLayout_;
+	finalLayout		= finalLayout_;
+}
+
+#pragma endregion
+
+#pragma region AttachmentDescription
+
+inline GreatVulkan::AttachmentReference::AttachmentReference(const decltype(attachment)& attachment_, const VkImageLayout& layout_)
+{
+	attachment	= attachment_;
+	layout		= layout_;
+}
+
+#pragma endregion
+
+#pragma region AttachmentDescription
+
+inline GreatVulkan::SubpassDescription::SubpassDescription(const VkPipelineBindPoint& pipelineBindPoint_, const Vector<VkAttachmentReference>& colorAttachments_):
+	SubpassDescription(pipelineBindPoint_, {}, colorAttachments_, {}, nullptr, {})
+{
+}
+inline GreatVulkan::SubpassDescription::SubpassDescription(
+	const VkPipelineBindPoint& pipelineBindPoint_,
+	const Vector<VkAttachmentReference>& inputAttachments_,
+	const Vector<VkAttachmentReference>& colorAttachments_,
+	const Vector<VkAttachmentReference>& resolveAttachments_,
+	const VkAttachmentReference* depthStencilAttachment_,
+	const Vector<uint32_t>& preserveAttachments_
+) {
+	// TODO: check resolveAttachments_.size()
+	flags						= 0;
+	pipelineBindPoint			= pipelineBindPoint_;
+	inputAttachmentCount		= inputAttachments_.size();
+	pInputAttachments			= inputAttachments_.data();
+	colorAttachmentCount		= colorAttachments_.size();
+	pColorAttachments			= colorAttachments_.data();
+	pResolveAttachments			= resolveAttachments_.data();
+	pDepthStencilAttachment		= depthStencilAttachment_;
+	preserveAttachmentCount		= preserveAttachments_.size();
+	pPreserveAttachments		= preserveAttachments_.data();
+}
+
+#pragma endregion
+
 
 // Instance
 inline GreatVulkan::Vector<VkLayerProperties> GreatVulkan::EnumerateInstanceLayerProperties()
@@ -635,9 +879,9 @@ inline void GreatVulkan::DestroyDevice(const VkDevice& vk_device_)
 	vkDestroyDevice(vk_device_, nullptr);
 }
 
+// Win32SurfaceKHR
 #if VK_USE_PLATFORM_WIN32_KHR
 
-// Win32SurfaceKHR
 inline VkBool32 GreatVulkan::GetPhysicalDeviceWin32PresentationSupportKHR(const VkPhysicalDevice& vk_physicalDevice_, const Size& queueFamilyIndex_)
 {
 	auto isPresentationSupport = vkGetPhysicalDeviceWin32PresentationSupportKHR(vk_physicalDevice_, queueFamilyIndex_);
@@ -705,8 +949,107 @@ inline GreatVulkan::Vector<VkSurfaceFormatKHR> GreatVulkan::GetPhysicalDeviceSur
 		throw Exception(); // TODO
 	}
 }
+inline void GreatVulkan::DestroySurfaceKHR(const VkInstance& vk_instance_, const VkSurfaceKHR& vk_surface_)
+{
+	vkDestroySurfaceKHR(vk_instance_, vk_surface_, nullptr);
+}
 
 #endif
+
+// Queue
+inline VkQueue GreatVulkan::GetDeviceQueue(const VkDevice& vk_device_, const uint32_t& vk_queueFamilyIndex_, const uint32_t& vk_queueIndex_)
+{
+	VkQueue vk_queue = VK_NULL_HANDLE; // TODO: should we really need to initialize this value?
+
+	vkGetDeviceQueue(vk_device_, vk_queueFamilyIndex_, vk_queueIndex_, &vk_queue);
+
+	return vk_queue;
+}
+
+// RenderPass
+inline VkRenderPass GreatVulkan::CreateRenderPass(const VkDevice& vk_device_, const VkRenderPassCreateInfo& vk_renderPassCreateInfo_)
+{
+	VkRenderPass vk_renderPass;
+
+	if (auto result = Result(vkCreateRenderPass(vk_device_, &vk_renderPassCreateInfo_, nullptr, &vk_renderPass)))
+	{
+		return vk_renderPass;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::DestroyRenderPass(const VkDevice& vk_device_, const VkRenderPass& vk_renderPass_)
+{
+	vkDestroyRenderPass(vk_device_, vk_renderPass_, nullptr);
+}
+
+// Command Pool
+inline VkCommandPool GreatVulkan::CreateCommandPool(const VkDevice& vk_device_, const VkCommandPoolCreateInfo &vk_commandPoolCreateInfo_)
+{
+	VkCommandPool vk_commandPool;
+
+	if (auto result = Result(vkCreateCommandPool(vk_device_, &vk_commandPoolCreateInfo_, nullptr, &vk_commandPool)))
+	{
+		return vk_commandPool;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::ResetCommandPool(const VkDevice& vk_device_, const VkCommandPool& vk_commandPool_, const VkCommandPoolResetFlags& flags_)
+{
+	if (auto result = Result(vkResetCommandPool(vk_device_, vk_commandPool_, flags_))); else
+	{
+		throw Exception();
+	}
+}
+inline void GreatVulkan::DestroyCommandPool(const VkDevice& vk_device_, const VkCommandPool& vk_commandPool_)
+{
+	vkDestroyCommandPool(vk_device_, vk_commandPool_, nullptr);
+}
+
+// Command Buffer
+inline GreatVulkan::Vector<VkCommandBuffer> GreatVulkan::AllocateCommandBuffers(const VkDevice& vk_device_, const VkCommandBufferAllocateInfo& vk_commandBufferAllocateInfo_)
+{
+	Vector<VkCommandBuffer> vk_commandBuffers(vk_commandBufferAllocateInfo_.commandBufferCount);
+
+	if (auto result = Result(vkAllocateCommandBuffers(vk_device_, &vk_commandBufferAllocateInfo_, vk_commandBuffers.data())))
+	{
+		return Move(vk_commandBuffers);
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::ResetCommandBuffer(const VkCommandBuffer& vk_commandBuffer_, const VkCommandBufferResetFlags& flags_)
+{
+	if (auto result = Result(vkResetCommandBuffer(vk_commandBuffer_, flags_))); else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::BeginCommandBuffer(const VkCommandBuffer& vk_commandBuffer_, const VkCommandBufferBeginInfo& vk_commandBufferBeginInfo_)
+{
+	if (auto result = Result(vkBeginCommandBuffer(vk_commandBuffer_, &vk_commandBufferBeginInfo_)));  else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::EndCommandBuffer(const VkCommandBuffer& vk_commandBuffer_)
+{
+	if (auto result = Result(vkEndCommandBuffer(vk_commandBuffer_))); else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::FreeCommandBuffers(const VkDevice& vk_device_, const VkCommandPool& vk_commandPool_, const Vector<VkCommandBuffer>& vk_commandBuffers_)
+{
+	vkFreeCommandBuffers(vk_device_, vk_commandPool_, vk_commandBuffers_.size(), vk_commandBuffers_.data());
+}
 
 #pragma endregion
 
