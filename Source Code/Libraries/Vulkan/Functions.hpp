@@ -155,6 +155,52 @@ namespace GreatVulkan
 	public:
 		inline CommandPoolCreateInfo& operator = (const CommandPoolCreateInfo&) = delete;
 	};
+	class ImageViewCreateInfo:
+		public VkImageViewCreateInfo
+	{
+	public:
+		inline ImageViewCreateInfo() = delete;
+		inline ImageViewCreateInfo(
+			const VkImageViewCreateFlags& flags_,
+			const VkImage& vk_image_,
+			const VkImageViewType& vk_imageViewType_,
+			const VkFormat& format_,
+			const VkComponentMapping& vk_componentMapping_,
+			const VkImageSubresourceRange& vk_imageSubresourceRange_
+		);
+		inline ImageViewCreateInfo(const ImageViewCreateInfo&) = delete;
+		inline ~ImageViewCreateInfo() = default;
+	public:
+		inline ImageViewCreateInfo& operator = (const ImageViewCreateInfo&) = delete;
+	};
+	class FramebufferCreateInfo:
+		public VkFramebufferCreateInfo
+	{
+	public:
+		inline FramebufferCreateInfo() = delete;
+		inline FramebufferCreateInfo(
+			const VkRenderPass& vk_renderPass_,
+			const Vector<VkImageView>& attachments_,
+			const decltype(width)& width_,
+			const decltype(height)& height_,
+			const decltype(layers)& layers_
+		);
+		inline FramebufferCreateInfo(const FramebufferCreateInfo&) = delete;
+		inline ~FramebufferCreateInfo() = default;
+	public:
+		inline FramebufferCreateInfo& operator = (const FramebufferCreateInfo&) = delete;
+	};
+	class FenceCreateInfo:
+		public VkFenceCreateInfo
+	{
+	public:
+		inline FenceCreateInfo() = delete;
+		inline FenceCreateInfo(const VkFenceCreateFlags& flags_);
+		inline FenceCreateInfo(const FenceCreateInfo&) = delete;
+		inline ~FenceCreateInfo() = default;
+	public:
+		inline FenceCreateInfo& operator = (const FenceCreateInfo&) = delete;
+	};
 	
 	class CommandBufferAllocateInfo:
 		public VkCommandBufferAllocateInfo
@@ -180,7 +226,123 @@ namespace GreatVulkan
 	public:
 		inline CommandBufferBeginInfo& operator = (const CommandBufferBeginInfo&) = delete;
 	};
+	class RenderPassBeginInfo:
+		public VkRenderPassBeginInfo
+	{
+	public:
+		inline RenderPassBeginInfo() = delete;
+		inline RenderPassBeginInfo(const VkRenderPass& vk_renderPass_, const VkFramebuffer& vk_framebuffer_, const VkRect2D& vk_renderArea_, const Vector<VkClearValue>& vk_clearValues_);
+		inline RenderPassBeginInfo(const RenderPassBeginInfo&) = delete;
+		inline ~RenderPassBeginInfo() = default;
+	public:
+		inline RenderPassBeginInfo& operator = (const RenderPassBeginInfo&) = delete;
+	};
 
+	class SubmitInfo:
+		public VkSubmitInfo
+	{
+	public:
+		inline SubmitInfo() = delete;
+		inline SubmitInfo(const Vector<VkCommandBuffer>& vk_commandBuffers_, const Vector<VkSemaphore>& vk_signalSemaphores_ = Vector<VkSemaphore>());
+		inline SubmitInfo(const SubmitInfo&) = delete;
+		inline ~SubmitInfo() = default;
+	public:
+		inline SubmitInfo& operator = (const SubmitInfo&) = delete;
+	};
+
+	class PresentInfoKHR:
+		public VkPresentInfoKHR
+	{
+	public:
+		inline PresentInfoKHR() = delete;
+		inline PresentInfoKHR(const Vector<VkSemaphore>& vk_waitSemaphores_, const Vector<VkSwapchainKHR>& vk_swapchains_, const Vector<uint32_t>& vk_nextImageIndices_); // TODO: vk_swapchains_ and vk_nextImageIndices_ should have the same size!
+		inline PresentInfoKHR(const PresentInfoKHR&) = delete;
+		inline ~PresentInfoKHR() = default;
+	public:
+		inline PresentInfoKHR& operator = (const PresentInfoKHR&) = delete;
+	};
+
+	class Offset2D:
+		public VkOffset2D
+	{
+	public:
+		using X = decltype(x);
+		using Y = decltype(y);
+	public:
+		inline Offset2D() = delete;
+		inline Offset2D(const X& x_, const Y& y_);
+		inline Offset2D(const Offset2D&) = delete;
+		inline ~Offset2D() = default;
+	public:
+		inline Offset2D& operator = (const Offset2D&) = delete;
+	};
+	class Extent2D:
+		public VkExtent2D
+	{
+	public:
+		using Width = decltype(width);
+		using Height = decltype(height);
+	public:
+		inline Extent2D() = delete;
+		inline Extent2D(const Width& width_, const Height& height_);
+		inline Extent2D(const Extent2D&) = delete;
+		inline ~Extent2D() = default;
+	public:
+		inline Extent2D& operator = (const Extent2D&) = delete;
+	};
+	class Rect2D:
+		public VkRect2D
+	{
+	public:
+		using Offset = decltype(offset);
+		using Extent = decltype(extent);
+	public:
+		inline Rect2D() = delete;
+		inline Rect2D(const Offset& offset_, const Extent& extent_);
+		inline Rect2D(const Rect2D&) = delete;
+		inline ~Rect2D() = default;
+	public:
+		inline Rect2D& operator = (const Rect2D&) = delete;
+	};
+	class ClearValue
+	{
+	public:
+		inline static VkClearValue Color(const float& r_, const float& g_, const float& b_, const float& a_);
+	public:
+		inline ClearValue() = delete;
+		inline ClearValue(const ClearValue&) = delete;
+		inline ~ClearValue() = default;
+	public:
+		inline ClearValue& operator = (const ClearValue&) = delete;
+	};
+	class ComponentMapping:
+		public VkComponentMapping
+	{
+	public:
+		inline ComponentMapping() = delete;
+		inline ComponentMapping(const VkComponentSwizzle& r_, const VkComponentSwizzle& g_, const VkComponentSwizzle& b_, const VkComponentSwizzle& a_);
+		inline ComponentMapping(const ComponentMapping&) = delete;
+		inline ~ComponentMapping() = default;
+	public:
+		inline ComponentMapping& operator = (const ComponentMapping&) = delete;
+	};
+	class ImageSubresourceRange:
+		public VkImageSubresourceRange
+	{
+	public:
+		inline ImageSubresourceRange() = delete;
+		inline ImageSubresourceRange(
+			VkImageAspectFlags aspectMask_,
+			uint32_t baseMipLevel_,
+			uint32_t levelCount_,
+			uint32_t baseArrayLayer_,
+			uint32_t layerCount_
+		);
+		inline ImageSubresourceRange(const ImageSubresourceRange&) = delete;
+		inline ~ImageSubresourceRange() = default;
+	public:
+		inline ImageSubresourceRange& operator = (const ImageSubresourceRange&) = delete;
+	};
 	class AttachmentDescription:
 		public VkAttachmentDescription
 	{
@@ -246,6 +408,35 @@ namespace GreatVulkan
 	};
 #endif
 
+#if VK_USE_PLATFORM_WIN32_KHR
+	class SwapchainCreateInfoKHR:
+		public VkSwapchainCreateInfoKHR
+	{
+	public:
+		inline SwapchainCreateInfoKHR() = delete;
+		inline SwapchainCreateInfoKHR(
+			VkSwapchainCreateFlagsKHR		flags_,
+			VkSurfaceKHR					vk_surface_,
+			uint32_t						minImageCount_,
+			VkFormat						imageFormat_,
+			VkColorSpaceKHR					imageColorSpace_,
+			VkExtent2D						imageExtent_,
+			uint32_t						imageArrayLayers_,
+			VkImageUsageFlags				imageUsage_,
+			VkSharingMode					imageSharingMode_,
+			const Vector<uint32_t>&			queueFamilyIndices_,
+			VkSurfaceTransformFlagBitsKHR	preTransform_,
+			VkCompositeAlphaFlagBitsKHR		compositeAlpha_,
+			VkPresentModeKHR				presentMode_,
+			VkBool32						clipped_,
+			VkSwapchainKHR					oldSwapchain_
+		);
+		inline SwapchainCreateInfoKHR(const SwapchainCreateInfoKHR&) = delete;
+		inline ~SwapchainCreateInfoKHR() = default;
+	public:
+		inline SwapchainCreateInfoKHR& operator = (const SwapchainCreateInfoKHR&) = delete;
+	};
+#endif
 	
 	// Instance
 	inline Vector<VkLayerProperties> EnumerateInstanceLayerProperties();
@@ -271,7 +462,7 @@ namespace GreatVulkan
 	inline VkDevice CreateDevice(const VkPhysicalDevice& vk_physicalDevice_, const VkDeviceCreateInfo& vk_deviceCreateInfo_);
 	inline void DestroyDevice(const VkDevice& vk_device_);
 
-	// Win32SurfaceKHR
+	// VK_KHR_surface
 #if VK_USE_PLATFORM_WIN32_KHR
 	inline VkBool32 GetPhysicalDeviceWin32PresentationSupportKHR(const VkPhysicalDevice& vk_physicalDevice_, const Size& queueFamilyIndex_);
 	inline VkSurfaceKHR CreateWin32SurfaceKHR(const VkInstance& vk_instance_, const VkWin32SurfaceCreateInfoKHR& vk_win32SurfaceCreateInfo_);
@@ -281,8 +472,19 @@ namespace GreatVulkan
 	inline void DestroySurfaceKHR(const VkInstance& vk_instance_, const VkSurfaceKHR& vk_surface_);
 #endif
 
+	// VK_KHR_swapchain
+#if VK_USE_PLATFORM_WIN32_KHR
+	inline VkSwapchainKHR CreateSwapchainKHR(const VkDevice& vk_device_, const VkSwapchainCreateInfoKHR& vk_swapchainCreateInfo_);
+	inline Vector<VkImage> GetSwapchainImagesKHR(const VkDevice& vk_device_, const VkSwapchainKHR& vk_swapchain_);
+	inline uint32_t AcquireNextImageKHR(const VkDevice& vk_device_, const VkSwapchainKHR& vk_swapchain_, const uint64_t& timeout_, const VkSemaphore& vk_semaphore_, const VkFence& vk_fence_);
+	inline void DestroySwapchainKHR(const VkDevice& vk_device_, const VkSwapchainKHR& vk_swapchain_);
+#endif
+
 	// Queue
 	inline VkQueue GetDeviceQueue(const VkDevice& vk_device_, const uint32_t& vk_queueFamilyIndex_, const uint32_t& vk_queueIndex_);
+	inline void QueueSubmit(const VkQueue& vk_queue_, const Vector<VkSubmitInfo>& vk_submitInfos_, const VkFence& vk_fence_ = VK_NULL_HANDLE);
+	inline void QueueWaitIdle(const VkQueue& vk_queue_);
+	inline void QueuePresentKHR(const VkQueue& vk_queue_, const VkPresentInfoKHR& vk_presentInfoKHR_);
 
 	// RenderPass
 	inline VkRenderPass CreateRenderPass(const VkDevice& vk_device_, const VkRenderPassCreateInfo& vk_renderPassCreateInfo_);
@@ -299,6 +501,24 @@ namespace GreatVulkan
 	inline void BeginCommandBuffer(const VkCommandBuffer& vk_commandBuffer_, const VkCommandBufferBeginInfo& vk_commandBufferBeginInfo_);
 	inline void EndCommandBuffer(const VkCommandBuffer& vk_commandBuffer_);
 	inline void FreeCommandBuffers(const VkDevice& vk_device_, const VkCommandPool& vk_commandPool_, const Vector<VkCommandBuffer>& vk_commandBuffers_); // TODO: free single buffer
+
+	// Image View
+	inline VkImageView CreateImageView(const VkDevice& vk_device_, const VkImageViewCreateInfo& vk_imageViewCreateInfo_);
+	inline void DestroyImageView(const VkDevice& vk_device_, const VkImageView& vk_imageView_);
+
+	// Framebuffer
+	inline VkFramebuffer CreateFramebuffer(const VkDevice& vk_device_, const VkFramebufferCreateInfo& vk_framebufferCreateInfo_);
+	inline void DestroyFramebuffer(const VkDevice& vk_device_, const VkFramebuffer& vk_framebuffer_);
+
+	// Commands
+	inline void CmdBeginRenderPass(const VkCommandBuffer& vk_commandBuffer_, const VkRenderPassBeginInfo& vk_renderPassBeginInfo_, const VkSubpassContents& vk_subpassContents_);
+	inline void CmdEndRenderPass(const VkCommandBuffer& vk_commandBuffer_);
+
+	// Fence
+	inline VkFence CreateFence(const VkDevice& vk_device_, const VkFenceCreateInfo& vk_fenceCreateInfo_);
+	inline void ResetFences(const VkDevice& vk_device_, const Vector<VkFence>& vk_fences_);
+	inline bool WaitForFences(const VkDevice& vk_device_, const Vector<VkFence>& vk_fences_, const VkBool32& waitAll_, const uint64_t timeout_);
+	inline void DestroyFence(const VkDevice& vk_device_, const VkFence& vk_fence_);
 }
 
 
@@ -368,6 +588,20 @@ inline GreatVulkan::DeviceCreateInfo::DeviceCreateInfo(const Vector<VkDeviceQueu
 	enabledExtensionCount	= vk_enabledPhysicalDeviceExtensionsNames_.size();
 	ppEnabledExtensionNames	= vk_enabledPhysicalDeviceExtensionsNames_.data();
 	pEnabledFeatures		= vk_physicalDeviceFeatures_;
+}
+
+#pragma endregion
+
+#pragma region DeviceQueueCreateInfo
+
+inline GreatVulkan::DeviceQueueCreateInfo::DeviceQueueCreateInfo(const decltype(VkDeviceQueueCreateInfo::queueFamilyIndex)& queueFamilyIndex_, const Vector<float>& queuePriorities_)
+{
+	sType				= VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	pNext				= nullptr;
+	flags				= 0;
+	queueFamilyIndex	= queueFamilyIndex_;
+	queueCount			= queuePriorities_.size();
+	pQueuePriorities	= queuePriorities_.data();
 }
 
 #pragma endregion
@@ -442,16 +676,86 @@ inline GreatVulkan::PhysicalDeviceFeatures::PhysicalDeviceFeatures(const Initial
 
 #pragma endregion
 
-#pragma region DeviceQueueCreateInfo
+#pragma region RenderPassCreateInfo
 
-inline GreatVulkan::DeviceQueueCreateInfo::DeviceQueueCreateInfo(const decltype(VkDeviceQueueCreateInfo::queueFamilyIndex)& queueFamilyIndex_, const Vector<float>& queuePriorities_)
+inline GreatVulkan::RenderPassCreateInfo::RenderPassCreateInfo(const Vector<VkAttachmentDescription>& vk_attachmentDescriptions_, const Vector<VkSubpassDescription>& vk_subpassDescriptions_, const Vector<VkSubpassDependency>& vk_subpassDependencies_)
 {
-	sType				= VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	sType			= VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	pNext			= nullptr;
+	flags			= 0;
+	attachmentCount	= vk_attachmentDescriptions_.size();
+	pAttachments	= vk_attachmentDescriptions_.data();
+	subpassCount	= vk_subpassDescriptions_.size();
+	pSubpasses		= vk_subpassDescriptions_.data();
+	dependencyCount	= vk_subpassDependencies_.size();
+	pDependencies	= vk_subpassDependencies_.data();
+}
+
+#pragma endregion
+
+#pragma region CommandPoolCreateInfo
+
+inline GreatVulkan::CommandPoolCreateInfo::CommandPoolCreateInfo(const VkCommandPoolCreateFlags& flags_, const decltype(queueFamilyIndex)& queueFamilyIndex_)
+{
+	sType				= VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	pNext				= nullptr;
+	flags				= flags_;
+	queueFamilyIndex	= queueFamilyIndex_;
+}
+
+#pragma endregion
+
+#pragma region ImageViewCreateInfo
+
+inline GreatVulkan::ImageViewCreateInfo::ImageViewCreateInfo(
+	const VkImageViewCreateFlags& flags_,
+	const VkImage& vk_image_,
+	const VkImageViewType& vk_imageViewType_,
+	const VkFormat& format_,
+	const VkComponentMapping& vk_componentMapping_,
+	const VkImageSubresourceRange& vk_imageSubresourceRange_
+) {
+	sType				= VkStructureType::VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	pNext				= nullptr;
+	flags				= flags_;
+	image				= vk_image_;
+	viewType			= vk_imageViewType_;
+	format				= format_;
+	components			= vk_componentMapping_;
+	subresourceRange	= vk_imageSubresourceRange_;
+}
+
+#pragma endregion
+
+#pragma region FramebufferCreateInfo
+
+inline GreatVulkan::FramebufferCreateInfo::FramebufferCreateInfo(
+	const VkRenderPass& vk_renderPass_,
+	const Vector<VkImageView>& attachments_,
+	const decltype(width)& width_,
+	const decltype(height)& height_,
+	const decltype(layers)& layers_
+) {
+	sType				= VkStructureType::VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	pNext				= nullptr;
 	flags				= 0;
-	queueFamilyIndex	= queueFamilyIndex_;
-	queueCount			= queuePriorities_.size();
-	pQueuePriorities	= queuePriorities_.data();
+	renderPass			= vk_renderPass_;
+	attachmentCount		= attachments_.size();
+	pAttachments		= attachments_.data();
+	width				= width_;
+	height				= height_;
+	layers				= layers_;
+}
+
+#pragma endregion
+
+#pragma region FramebufferCreateInfo
+
+inline GreatVulkan::FenceCreateInfo::FenceCreateInfo(const VkFenceCreateFlags& flags_)
+{
+	sType	= VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	pNext	= nullptr;
+	flags	= flags_;
 }
 
 #pragma endregion
@@ -473,36 +777,52 @@ inline GreatVulkan::Win32SurfaceCreateInfoKHR::Win32SurfaceCreateInfoKHR(const d
 
 #pragma endregion
 
-#pragma region RenderPassCreateInfo
+#pragma region SwapchainCreateInfoKHR
 
-inline GreatVulkan::RenderPassCreateInfo::RenderPassCreateInfo(const Vector<VkAttachmentDescription>& vk_attachmentDescriptions_, const Vector<VkSubpassDescription>& vk_subpassDescriptions_, const Vector<VkSubpassDependency>& vk_subpassDependencies_)
-{
-	sType			= VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	pNext			= nullptr;
-	flags			= 0;
-	attachmentCount	= vk_attachmentDescriptions_.size();
-	pAttachments	= vk_attachmentDescriptions_.data();
-	subpassCount	= vk_subpassDescriptions_.size();
-	pSubpasses		= vk_subpassDescriptions_.data();
-	dependencyCount	= vk_subpassDependencies_.size();
-	pDependencies	= vk_subpassDependencies_.data();
+#if VK_USE_PLATFORM_WIN32_KHR
+
+inline GreatVulkan::SwapchainCreateInfoKHR::SwapchainCreateInfoKHR(
+    VkSwapchainCreateFlagsKHR		flags_,
+	VkSurfaceKHR					vk_surface_,
+    uint32_t						minImageCount_,
+    VkFormat						imageFormat_,
+    VkColorSpaceKHR					imageColorSpace_,
+    VkExtent2D						imageExtent_,
+    uint32_t						imageArrayLayers_,
+    VkImageUsageFlags				imageUsage_,
+    VkSharingMode					imageSharingMode_,
+	const Vector<uint32_t>&			queueFamilyIndices_,
+    VkSurfaceTransformFlagBitsKHR	preTransform_,
+    VkCompositeAlphaFlagBitsKHR		compositeAlpha_,
+    VkPresentModeKHR				presentMode_,
+    VkBool32						clipped_,
+    VkSwapchainKHR					oldSwapchain_
+) {
+	sType					= VkStructureType::VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	pNext					= nullptr;
+	flags					= flags_;
+	surface					= vk_surface_;
+	minImageCount			= minImageCount_;
+	imageFormat				= imageFormat_;
+	imageColorSpace			= imageColorSpace_;
+	imageExtent				= imageExtent_;
+	imageArrayLayers		= imageArrayLayers_;
+	imageUsage				= imageUsage_;
+	imageSharingMode		= imageSharingMode_;
+	queueFamilyIndexCount	= queueFamilyIndices_.size();
+	pQueueFamilyIndices		= queueFamilyIndices_.data();
+	preTransform			= preTransform_;
+	compositeAlpha			= compositeAlpha_;
+	presentMode				= presentMode_;
+	clipped					= clipped_;
+	oldSwapchain			= oldSwapchain_;
 }
+
+#endif
 
 #pragma endregion
 
-#pragma region RenderPassCreateInfo
-
-inline GreatVulkan::CommandPoolCreateInfo::CommandPoolCreateInfo(const VkCommandPoolCreateFlags& flags_, const decltype(queueFamilyIndex)& queueFamilyIndex_)
-{
-	sType				= VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	pNext				= nullptr;
-	flags				= flags_;
-	queueFamilyIndex	= queueFamilyIndex_;
-}
-
-#pragma endregion
-
-#pragma region RenderPassCreateInfo
+#pragma region CommandBufferAllocateInfo
 
 inline GreatVulkan::CommandBufferAllocateInfo::CommandBufferAllocateInfo(const VkCommandPool& vk_commandPool_, const VkCommandBufferLevel& level_, const decltype(commandBufferCount)& commandBufferCount_)
 {
@@ -515,7 +835,7 @@ inline GreatVulkan::CommandBufferAllocateInfo::CommandBufferAllocateInfo(const V
 
 #pragma endregion
 
-#pragma region RenderPassCreateInfo
+#pragma region CommandBufferBeginInfo
 
 inline GreatVulkan::CommandBufferBeginInfo::CommandBufferBeginInfo(const VkCommandBufferUsageFlags& flags_, const VkCommandBufferInheritanceInfo& inheritanceInfo_):
 	CommandBufferBeginInfo(flags_, &inheritanceInfo_)
@@ -527,6 +847,130 @@ inline GreatVulkan::CommandBufferBeginInfo::CommandBufferBeginInfo(const VkComma
 	pNext				= nullptr;
 	flags				= flags_;
 	pInheritanceInfo	= inheritanceInfo_;
+}
+
+#pragma endregion
+
+#pragma region RenderPassBeginInfo
+
+inline GreatVulkan::RenderPassBeginInfo::RenderPassBeginInfo(const VkRenderPass& vk_renderPass_, const VkFramebuffer& vk_framebuffer_, const VkRect2D& vk_renderArea_, const Vector<VkClearValue>& vk_clearValues_)
+{
+	sType			= VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	pNext			= nullptr;
+	renderPass		= vk_renderPass_;
+	framebuffer		= vk_framebuffer_;
+	renderArea		= vk_renderArea_;
+	clearValueCount	= vk_clearValues_.size();
+	pClearValues	= vk_clearValues_.data();
+}
+
+#pragma endregion
+
+#pragma region SubmitInfo
+
+inline GreatVulkan::SubmitInfo::SubmitInfo(const Vector<VkCommandBuffer>& vk_commandBuffers_, const Vector<VkSemaphore>& vk_signalSemaphores_)
+{
+	sType					= VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	pNext					= nullptr;
+	waitSemaphoreCount		= 0; // TODO: vk_waitSemaphores_.size();
+	pWaitSemaphores			= nullptr; // TODO: vk_waitSemaphores_.data();
+	pWaitDstStageMask		= nullptr; // TODO
+	commandBufferCount		= vk_commandBuffers_.size();
+	pCommandBuffers			= vk_commandBuffers_.data();
+	signalSemaphoreCount	= vk_signalSemaphores_.size();
+	pSignalSemaphores		= vk_signalSemaphores_.data();
+}
+
+#pragma endregion
+
+#pragma region PresentInfoKHR
+
+inline GreatVulkan::PresentInfoKHR::PresentInfoKHR(const Vector<VkSemaphore>& vk_waitSemaphores_, const Vector<VkSwapchainKHR>& vk_swapchains_, const Vector<uint32_t>& vk_nextImageIndices_)
+{
+	sType				= VkStructureType::VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	pNext				= nullptr;
+	waitSemaphoreCount	= vk_waitSemaphores_.size();
+	pWaitSemaphores		= vk_waitSemaphores_.data();
+	swapchainCount		= vk_swapchains_.size();
+	pSwapchains			= vk_swapchains_.data();
+	pImageIndices		= vk_nextImageIndices_.data();
+	pResults			= nullptr; // may be NULL, TODO: implement
+}
+
+#pragma endregion
+
+#pragma region Offset2D
+
+inline GreatVulkan::Offset2D::Offset2D(const X& x_, const Y& y_)
+{
+	x = x_;
+	y = y_;
+}
+
+#pragma endregion
+
+#pragma region Offset2D
+
+inline GreatVulkan::Extent2D::Extent2D(const Width& width_, const Height& height_)
+{
+	width = width_;
+	height = height_;
+}
+
+#pragma endregion
+
+#pragma region Rect2D
+
+inline GreatVulkan::Rect2D::Rect2D(const Offset& offset_, const Extent& extent_)
+{
+	offset = offset_;
+	extent = extent_;
+}
+
+#pragma endregion
+
+#pragma region Rect2D
+
+inline VkClearValue GreatVulkan::ClearValue::Color(const float& r_, const float& g_, const float& b_, const float& a_)
+{
+	VkClearValue vk_clearValue;
+
+	vk_clearValue.color.float32[0] = r_;
+	vk_clearValue.color.float32[1] = g_;
+	vk_clearValue.color.float32[2] = b_;
+	vk_clearValue.color.float32[3] = a_;
+
+	return vk_clearValue;
+}
+
+#pragma endregion
+
+#pragma region ComponentMapping
+
+inline GreatVulkan::ComponentMapping::ComponentMapping(const VkComponentSwizzle& r_, const VkComponentSwizzle& g_, const VkComponentSwizzle& b_, const VkComponentSwizzle& a_)
+{
+	r	= r_;
+	g	= g_;
+	b	= b_;
+	a	= a_;
+}
+
+#pragma endregion
+
+#pragma region ImageSubresourceRange
+
+inline GreatVulkan::ImageSubresourceRange::ImageSubresourceRange(
+	VkImageAspectFlags aspectMask_,
+	uint32_t baseMipLevel_,
+	uint32_t levelCount_,
+	uint32_t baseArrayLayer_,
+	uint32_t layerCount_
+) {
+	aspectMask = aspectMask_;
+	baseMipLevel = baseMipLevel_;
+	levelCount = levelCount_;
+	baseArrayLayer = baseArrayLayer_;
+	layerCount = layerCount_;
 }
 
 #pragma endregion
@@ -556,7 +1000,7 @@ inline GreatVulkan::AttachmentDescription::AttachmentDescription(
 
 #pragma endregion
 
-#pragma region AttachmentDescription
+#pragma region AttachmentReference
 
 inline GreatVulkan::AttachmentReference::AttachmentReference(const decltype(attachment)& attachment_, const VkImageLayout& layout_)
 {
@@ -566,7 +1010,7 @@ inline GreatVulkan::AttachmentReference::AttachmentReference(const decltype(atta
 
 #pragma endregion
 
-#pragma region AttachmentDescription
+#pragma region SubpassDescription
 
 inline GreatVulkan::SubpassDescription::SubpassDescription(const VkPipelineBindPoint& pipelineBindPoint_, const Vector<VkAttachmentReference>& colorAttachments_):
 	SubpassDescription(pipelineBindPoint_, {}, colorAttachments_, {}, nullptr, {})
@@ -956,6 +1400,64 @@ inline void GreatVulkan::DestroySurfaceKHR(const VkInstance& vk_instance_, const
 
 #endif
 
+// VK_KHR_swapchain
+#if VK_USE_PLATFORM_WIN32_KHR
+
+inline VkSwapchainKHR GreatVulkan::CreateSwapchainKHR(const VkDevice& vk_device_, const VkSwapchainCreateInfoKHR& vk_swapchainCreateInfo_)
+{
+	VkSwapchainKHR vk_swapchain;
+
+	if (auto result = Result(vkCreateSwapchainKHR(vk_device_, &vk_swapchainCreateInfo_, nullptr, &vk_swapchain)))
+	{
+		return vk_swapchain;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline GreatVulkan::Vector<VkImage> GreatVulkan::GetSwapchainImagesKHR(const VkDevice& vk_device_, const VkSwapchainKHR& vk_swapchain_)
+{
+	uint32_t vk_swapchainImagesCount;
+
+	if (auto result = Result(vkGetSwapchainImagesKHR(vk_device_, vk_swapchain_, &vk_swapchainImagesCount, nullptr)))
+	{
+		Vector<VkImage> vk_swapchainImages(vk_swapchainImagesCount);
+
+		if (auto result = Result(vkGetSwapchainImagesKHR(vk_device_, vk_swapchain_, &vk_swapchainImagesCount, vk_swapchainImages.data())))
+		{
+			return Move(vk_swapchainImages);
+		}
+		else
+		{
+			throw Exception();
+		}
+	}
+	else
+	{
+		throw Exception();
+	}
+}
+inline uint32_t GreatVulkan::AcquireNextImageKHR(const VkDevice& vk_device_, const VkSwapchainKHR& vk_swapchain_, const uint64_t& timeout_, const VkSemaphore& vk_semaphore_, const VkFence& vk_fence_)
+{
+	uint32_t vk_nextImageIndex;
+
+	if (auto result = Result(vkAcquireNextImageKHR(vk_device_, vk_swapchain_, timeout_, vk_semaphore_, vk_fence_, &vk_nextImageIndex)))
+	{
+		return vk_nextImageIndex;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::DestroySwapchainKHR(const VkDevice& vk_device_, const VkSwapchainKHR& vk_swapchain_)
+{
+	vkDestroySwapchainKHR(vk_device_, vk_swapchain_, nullptr);
+}
+
+#endif
+
 // Queue
 inline VkQueue GreatVulkan::GetDeviceQueue(const VkDevice& vk_device_, const uint32_t& vk_queueFamilyIndex_, const uint32_t& vk_queueIndex_)
 {
@@ -964,6 +1466,27 @@ inline VkQueue GreatVulkan::GetDeviceQueue(const VkDevice& vk_device_, const uin
 	vkGetDeviceQueue(vk_device_, vk_queueFamilyIndex_, vk_queueIndex_, &vk_queue);
 
 	return vk_queue;
+}
+inline void GreatVulkan::QueueSubmit(const VkQueue& vk_queue_, const Vector<VkSubmitInfo>& vk_submitInfos_, const VkFence& vk_fence_)
+{
+	if (auto result = Result(vkQueueSubmit(vk_queue_, vk_submitInfos_.size(), vk_submitInfos_.data(), vk_fence_))); else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::QueueWaitIdle(const VkQueue& vk_queue_)
+{
+	if (auto result = Result(vkQueueWaitIdle(vk_queue_))); else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::QueuePresentKHR(const VkQueue& vk_queue_, const VkPresentInfoKHR& vk_presentInfoKHR_)
+{
+	if (auto result = Result(vkQueuePresentKHR(vk_queue_, &vk_presentInfoKHR_))); else
+	{
+		throw Exception(); // TODO
+	}
 }
 
 // RenderPass
@@ -1049,6 +1572,98 @@ inline void GreatVulkan::EndCommandBuffer(const VkCommandBuffer& vk_commandBuffe
 inline void GreatVulkan::FreeCommandBuffers(const VkDevice& vk_device_, const VkCommandPool& vk_commandPool_, const Vector<VkCommandBuffer>& vk_commandBuffers_)
 {
 	vkFreeCommandBuffers(vk_device_, vk_commandPool_, vk_commandBuffers_.size(), vk_commandBuffers_.data());
+}
+
+// Image View
+inline VkImageView GreatVulkan::CreateImageView(const VkDevice& vk_device_, const VkImageViewCreateInfo& vk_imageViewCreateInfo_)
+{
+	VkImageView vk_imageView;
+
+	if (auto result = Result(vkCreateImageView(vk_device_, &vk_imageViewCreateInfo_, nullptr, &vk_imageView)))
+	{
+		return vk_imageView;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::DestroyImageView(const VkDevice& vk_device_, const VkImageView& vk_imageView_)
+{
+	vkDestroyImageView(vk_device_, vk_imageView_, nullptr);
+}
+
+// Framebuffer
+inline VkFramebuffer GreatVulkan::CreateFramebuffer(const VkDevice& vk_device_, const VkFramebufferCreateInfo& vk_framebufferCreateInfo_)
+{
+	VkFramebuffer vk_framebuffer;
+
+	if (auto result = Result(vkCreateFramebuffer(vk_device_, &vk_framebufferCreateInfo_, nullptr, &vk_framebuffer)))
+	{
+		return vk_framebuffer;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::DestroyFramebuffer(const VkDevice& vk_device_, const VkFramebuffer& vk_framebuffer_)
+{
+	vkDestroyFramebuffer(vk_device_, vk_framebuffer_, nullptr);
+}
+
+// Commands
+inline void GreatVulkan::CmdBeginRenderPass(const VkCommandBuffer& vk_commandBuffer_, const VkRenderPassBeginInfo& vk_renderPassBeginInfo_, const VkSubpassContents& vk_subpassContents_)
+{
+	vkCmdBeginRenderPass(vk_commandBuffer_, &vk_renderPassBeginInfo_, vk_subpassContents_);
+}
+inline void GreatVulkan::CmdEndRenderPass(const VkCommandBuffer& vk_commandBuffer_)
+{
+	vkCmdEndRenderPass(vk_commandBuffer_);
+}
+
+// Fence
+inline VkFence GreatVulkan::CreateFence(const VkDevice& vk_device_, const VkFenceCreateInfo& vk_fenceCreateInfo_)
+{
+	VkFence vk_fence;
+
+	if (auto result = Result(vkCreateFence(vk_device_, &vk_fenceCreateInfo_, nullptr, &vk_fence)))
+	{
+		return vk_fence;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::ResetFences(const VkDevice& vk_device_, const Vector<VkFence>& vk_fences_)
+{
+	if (auto result = Result(vkResetFences(vk_device_, vk_fences_.size(), vk_fences_.data()))); else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline bool GreatVulkan::WaitForFences(const VkDevice& vk_device_, const Vector<VkFence>& vk_fences_, const VkBool32& waitAll_, const uint64_t timeout_)
+{
+	if (auto result = Result(vkWaitForFences(vk_device_, vk_fences_.size(), vk_fences_.data(), waitAll_, timeout_)))
+	{
+		return true;
+	}
+	else
+	{
+		if (static_cast<const Result::Value>(result) == Result::Value::Timeout)
+		{
+			return false;
+		}
+		else
+		{
+			throw Exception(); // TODO
+		}
+	}
+}
+inline void GreatVulkan::DestroyFence(const VkDevice& vk_device_, const VkFence& vk_fence_)
+{
+	vkDestroyFence(vk_device_, vk_fence_, nullptr);
 }
 
 #pragma endregion

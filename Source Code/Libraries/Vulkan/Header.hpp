@@ -169,17 +169,10 @@ namespace GreatVulkan
 		inline bool operator != (const Result& source_) const;
 	public:
 		inline operator bool() const;
+		inline explicit operator Value() const;
 	public:
 		inline bool IsError() const;
 	};
-	
-	using Offset2D = VkOffset2D;
-	using Offset3D = VkOffset3D;
-	
-	using Extent2D = VkExtent2D;
-	using Extent3D = VkExtent3D;
-	
-	using Rect2D = VkRect2D;
 }
 
 
@@ -435,6 +428,10 @@ inline bool GreatVulkan::Result::operator != (const Result& source_) const
 inline GreatVulkan::Result::operator bool() const
 {
 	return value == Value::Success;
+}
+inline GreatVulkan::Result::operator Value() const
+{
+	return value;
 }
 
 inline bool GreatVulkan::Result::IsError() const
