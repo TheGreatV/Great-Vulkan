@@ -147,6 +147,21 @@ void func()
 		}))
 	));
 
+	auto getDeviceMemoryIndex = [&](const VkMemoryPropertyFlags& properties) -> uint32_t
+	{
+		for (uint32_t i = 0; i < vk_physicalDeviceMemoryProperties.memoryTypeCount; ++i)
+		{
+			auto &memoryType = vk_physicalDeviceMemoryProperties.memoryTypes[i];
+
+			if ((memoryType.propertyFlags & properties) == properties)
+			{
+				return i;
+			}
+		}
+
+		throw Exception(); // TODO
+	};
+
 	// Surface
 	if (auto isPresentationSupported = Boolean(GetPhysicalDeviceWin32PresentationSupportKHR(vk_physicalDevice, 0))); else
 	{
@@ -202,6 +217,24 @@ void func()
 			));
 		}
 	}
+
+	// Buffers
+	auto vk_vertexBuffer = CreateBuffer(vk_device, BufferCreateInfo(0, 1, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VkSharingMode::VK_SHARING_MODE_EXCLUSIVE));
+	auto vk_vertexBufferDeviceMemory = [&](){
+		auto vk_memoryRequirements = GetBufferMemoryRequirements(vk_device, vk_vertexBuffer);
+		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
+			vk_memoryRequirements.size,
+			getDeviceMemoryIndex(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+		));
+
+		auto data = MapMemory(vk_device, vk_deviceMemory, 0, 1, 0);
+
+		std::memset(data, 0, 1);
+
+		UnmapMemory(vk_device, vk_deviceMemory);
+
+		return vk_deviceMemory;
+	}();
 
 	// RenderPass
 	auto vk_renderPass = CreateRenderPass(vk_device, RenderPassCreateInfo(
@@ -305,6 +338,8 @@ void func()
 	FreeCommandBuffers(vk_device, vk_commandPool, vk_commandBuffers);
 	DestroyCommandPool(vk_device, vk_commandPool); // TODO: crash when attempting to destroy pool without any buffers allocated
 	DestroyRenderPass(vk_device, vk_renderPass);
+	FreeMemory(vk_device, vk_vertexBufferDeviceMemory);
+	DestroyBuffer(vk_device, vk_vertexBuffer);
 	for (auto &vk_framebuffer : vk_framebuffers)
 	{
 		DestroyFramebuffer(vk_device, vk_framebuffer);
