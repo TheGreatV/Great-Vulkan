@@ -201,7 +201,24 @@ namespace GreatVulkan
 	public:
 		inline FenceCreateInfo& operator = (const FenceCreateInfo&) = delete;
 	};
-	
+	class BufferCreateInfo:
+		public VkBufferCreateInfo
+	{
+	public:
+		inline BufferCreateInfo() = delete;
+		inline BufferCreateInfo(
+			const VkBufferCreateFlags& flags_,
+			const VkDeviceSize size_,
+			const VkBufferUsageFlags& usage_,
+			const VkSharingMode& sharingMode_,
+			const Vector<uint32_t>& queueFamilyIndices_ = Vector<uint32_t>()
+		);
+		inline BufferCreateInfo(const BufferCreateInfo&) = delete;
+		inline ~BufferCreateInfo() = default;
+	public:
+		inline BufferCreateInfo& operator = (const BufferCreateInfo&) = delete;
+	};
+
 	class CommandBufferAllocateInfo:
 		public VkCommandBufferAllocateInfo
 	{
@@ -212,6 +229,17 @@ namespace GreatVulkan
 		inline ~CommandBufferAllocateInfo() = default;
 	public:
 		inline CommandBufferAllocateInfo& operator = (const CommandBufferAllocateInfo&) = delete;
+	};
+	class MemoryAllocateInfo:
+		public VkMemoryAllocateInfo
+	{
+	public:
+		inline MemoryAllocateInfo() = delete;
+		inline MemoryAllocateInfo(const decltype(allocationSize)& allocationSize_, const decltype(memoryTypeIndex)& memoryTypeIndex_);
+		inline MemoryAllocateInfo(const MemoryAllocateInfo&) = delete;
+		inline ~MemoryAllocateInfo() = default;
+	public:
+		inline MemoryAllocateInfo& operator = (const MemoryAllocateInfo&) = delete;
 	};
 
 	class CommandBufferBeginInfo:
@@ -519,6 +547,17 @@ namespace GreatVulkan
 	inline void ResetFences(const VkDevice& vk_device_, const Vector<VkFence>& vk_fences_);
 	inline bool WaitForFences(const VkDevice& vk_device_, const Vector<VkFence>& vk_fences_, const VkBool32& waitAll_, const uint64_t timeout_);
 	inline void DestroyFence(const VkDevice& vk_device_, const VkFence& vk_fence_);
+
+	// Buffer
+	inline VkBuffer CreateBuffer(const VkDevice& vk_device_, const VkBufferCreateInfo& vk_bufferCreateInfo_);
+	inline VkMemoryRequirements GetBufferMemoryRequirements(const VkDevice& vk_device_, const VkBuffer& vk_buffer_);
+	inline void DestroyBuffer(const VkDevice& vk_device_, const VkBuffer& vk_buffer_);
+
+	// Device Memory
+	inline VkDeviceMemory AllocateMemory(const VkDevice& vk_device_, const VkMemoryAllocateInfo& vk_memoryAllocateInfo_);
+	inline void* MapMemory(const VkDevice& vk_device_, const VkDeviceMemory& vk_deviceMemory_, const VkDeviceSize& offset_, const VkDeviceSize& size_, const VkMemoryMapFlags& flags_);
+	inline void UnmapMemory(const VkDevice& vk_device_, const VkDeviceMemory& vk_deviceMemory_);
+	inline void FreeMemory(const VkDevice& vk_device_, const VkDeviceMemory& vk_deviceMemory_);
 }
 
 
@@ -749,13 +788,34 @@ inline GreatVulkan::FramebufferCreateInfo::FramebufferCreateInfo(
 
 #pragma endregion
 
-#pragma region FramebufferCreateInfo
+#pragma region FenceCreateInfo
 
 inline GreatVulkan::FenceCreateInfo::FenceCreateInfo(const VkFenceCreateFlags& flags_)
 {
 	sType	= VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	pNext	= nullptr;
 	flags	= flags_;
+}
+
+#pragma endregion
+
+#pragma region BufferCreateInfo
+
+inline GreatVulkan::BufferCreateInfo::BufferCreateInfo(
+	const VkBufferCreateFlags& flags_,
+	const VkDeviceSize size_,
+	const VkBufferUsageFlags& usage_,
+	const VkSharingMode& sharingMode_,
+	const Vector<uint32_t>& queueFamilyIndices_
+) {
+	sType					= VkStructureType::VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	pNext					= nullptr;
+	flags					= flags_;
+	size					= size_;
+	usage					= usage_;
+	sharingMode				= sharingMode_;
+	queueFamilyIndexCount	= queueFamilyIndices_.size();
+	pQueueFamilyIndices		= queueFamilyIndices_.data();
 }
 
 #pragma endregion
@@ -831,6 +891,18 @@ inline GreatVulkan::CommandBufferAllocateInfo::CommandBufferAllocateInfo(const V
 	commandPool			= vk_commandPool_;
 	level				= level_;
 	commandBufferCount	= commandBufferCount_;
+}
+
+#pragma endregion
+
+#pragma region MemoryAllocateInfo
+
+inline GreatVulkan::MemoryAllocateInfo::MemoryAllocateInfo(const decltype(allocationSize)& allocationSize_, const decltype(memoryTypeIndex)& memoryTypeIndex_)
+{
+	sType			= VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	pNext			= nullptr;
+	allocationSize	= allocationSize_;
+	memoryTypeIndex = memoryTypeIndex_;
 }
 
 #pragma endregion
@@ -1664,6 +1736,68 @@ inline bool GreatVulkan::WaitForFences(const VkDevice& vk_device_, const Vector<
 inline void GreatVulkan::DestroyFence(const VkDevice& vk_device_, const VkFence& vk_fence_)
 {
 	vkDestroyFence(vk_device_, vk_fence_, nullptr);
+}
+
+// Buffer
+inline VkBuffer GreatVulkan::CreateBuffer(const VkDevice& vk_device_, const VkBufferCreateInfo& vk_bufferCreateInfo_)
+{
+	VkBuffer vk_buffer;
+
+	if (auto result = Result(vkCreateBuffer(vk_device_, &vk_bufferCreateInfo_, nullptr, &vk_buffer)))
+	{
+		return vk_buffer;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline VkMemoryRequirements GreatVulkan::GetBufferMemoryRequirements(const VkDevice& vk_device_, const VkBuffer& vk_buffer_)
+{
+	VkMemoryRequirements vk_memoryRequirements;
+
+	vkGetBufferMemoryRequirements(vk_device_, vk_buffer_, &vk_memoryRequirements);
+
+	return vk_memoryRequirements;
+}
+inline void GreatVulkan::DestroyBuffer(const VkDevice& vk_device_, const VkBuffer& vk_buffer_)
+{
+	vkDestroyBuffer(vk_device_, vk_buffer_, nullptr);
+}
+
+// Device Memory
+inline VkDeviceMemory GreatVulkan::AllocateMemory(const VkDevice& vk_device_, const VkMemoryAllocateInfo& vk_memoryAllocateInfo_)
+{
+	VkDeviceMemory vk_deviceMemory;
+
+	if (auto result = Result(vkAllocateMemory(vk_device_, &vk_memoryAllocateInfo_, nullptr, &vk_deviceMemory)))
+	{
+		return vk_deviceMemory;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void* GreatVulkan::MapMemory(const VkDevice& vk_device_, const VkDeviceMemory& vk_deviceMemory_, const VkDeviceSize& offset_, const VkDeviceSize& size_, const VkMemoryMapFlags& flags_)
+{
+	void* data;
+	if (auto result = Result(vkMapMemory(vk_device_, vk_deviceMemory_, offset_, size_, flags_, &data)))
+	{
+		return data;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::UnmapMemory(const VkDevice& vk_device_, const VkDeviceMemory& vk_deviceMemory_)
+{
+	vkUnmapMemory(vk_device_, vk_deviceMemory_);
+}
+inline void GreatVulkan::FreeMemory(const VkDevice& vk_device_, const VkDeviceMemory& vk_deviceMemory_)
+{
+	vkFreeMemory(vk_device_, vk_deviceMemory_, nullptr);
 }
 
 #pragma endregion
