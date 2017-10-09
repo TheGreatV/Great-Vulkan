@@ -24,6 +24,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{53
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Functions_Triangle", "Projects\Examples\Functions_Triangle\Functions_Triangle.vcxproj", "{AC79B470-9D24-4ADF-86E9-063338557E98}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Issues", "Issues", "{E341B2C0-60D6-4E7B-AC73-5CC2211572D3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EmptyCommandPool", "Projects\Issues\EmptyCommandPool\EmptyCommandPool.vcxproj", "{9693E684-C675-4673-AF78-6CF1EB3F48CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -46,6 +50,10 @@ Global
 		{AC79B470-9D24-4ADF-86E9-063338557E98}.Debug|Win32.Build.0 = Debug|Win32
 		{AC79B470-9D24-4ADF-86E9-063338557E98}.Release|Win32.ActiveCfg = Release|Win32
 		{AC79B470-9D24-4ADF-86E9-063338557E98}.Release|Win32.Build.0 = Release|Win32
+		{9693E684-C675-4673-AF78-6CF1EB3F48CF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9693E684-C675-4673-AF78-6CF1EB3F48CF}.Debug|Win32.Build.0 = Debug|Win32
+		{9693E684-C675-4673-AF78-6CF1EB3F48CF}.Release|Win32.ActiveCfg = Release|Win32
+		{9693E684-C675-4673-AF78-6CF1EB3F48CF}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -55,5 +63,6 @@ Global
 		{340D3A52-34AD-4F42-8510-3DB4C26F5055} = {A1AA7846-A6CA-45EE-96E6-DADA5F594864}
 		{F45C726C-0A1C-42F4-8548-02D21842C790} = {A1AA7846-A6CA-45EE-96E6-DADA5F594864}
 		{AC79B470-9D24-4ADF-86E9-063338557E98} = {53F535C9-5337-4F23-9D99-CF41A3F48CE3}
+		{9693E684-C675-4673-AF78-6CF1EB3F48CF} = {E341B2C0-60D6-4E7B-AC73-5CC2211572D3}
 	EndGlobalSection
 EndGlobal
