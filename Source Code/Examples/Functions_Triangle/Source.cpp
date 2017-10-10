@@ -279,6 +279,8 @@ void func()
 
 		UnmapMemory(vk_device, vk_deviceMemory);
 
+		BindBufferMemory(vk_device, vk_vertexBuffer, vk_deviceMemory);
+
 		return vk_deviceMemory;
 	}();
 
@@ -421,6 +423,10 @@ void func()
 			);
 
 			CmdBindPipeline(vk_commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
+
+			CmdBindVertexBuffers(vk_commandBuffer, 0, 1, {vk_vertexBuffer}, {0});
+
+			CmdDraw(vk_commandBuffer, 3, 1, 0, 0);
 
 			CmdEndRenderPass(vk_commandBuffer);
 
