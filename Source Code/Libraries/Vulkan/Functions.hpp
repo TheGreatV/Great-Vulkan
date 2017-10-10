@@ -218,6 +218,199 @@ namespace GreatVulkan
 	public:
 		inline BufferCreateInfo& operator = (const BufferCreateInfo&) = delete;
 	};
+	class ShaderModuleCreateInfo:
+		public VkShaderModuleCreateInfo
+	{
+	public:
+		inline ShaderModuleCreateInfo() = delete;
+		inline explicit ShaderModuleCreateInfo(const Vector<uint32_t>& sourceCode_);
+		inline ShaderModuleCreateInfo(const ShaderModuleCreateInfo&) = delete;
+		inline ~ShaderModuleCreateInfo() = default;
+	public:
+		inline ShaderModuleCreateInfo& operator = (const ShaderModuleCreateInfo&) = delete;
+	};
+	class PipelineLayoutCreateInfo:
+		public VkPipelineLayoutCreateInfo
+	{
+	public:
+		inline PipelineLayoutCreateInfo() = delete;
+		inline PipelineLayoutCreateInfo(const Vector<VkDescriptorSetLayout>& vk_descriptorSetLayouts_, const Vector<VkPushConstantRange>& vk_pushConstantRanges_);
+		inline PipelineLayoutCreateInfo(const PipelineLayoutCreateInfo&) = delete;
+		inline ~PipelineLayoutCreateInfo() = default;
+	public:
+		inline PipelineLayoutCreateInfo& operator = (const PipelineLayoutCreateInfo&) = delete;
+	};
+	class GraphicsPipelineCreateInfo:
+		public VkGraphicsPipelineCreateInfo
+	{
+	public:
+		inline GraphicsPipelineCreateInfo() = delete;
+		inline GraphicsPipelineCreateInfo(
+			const VkPipelineCreateFlags& flags_,
+			const Vector<VkPipelineShaderStageCreateInfo>& vk_stages_,
+			const VkPipelineVertexInputStateCreateInfo& vk_vertexInputState_,
+			const VkPipelineInputAssemblyStateCreateInfo& vk_inputAssemblyState_,
+			const VkPipelineViewportStateCreateInfo& vk_viewportState_,
+			const VkPipelineRasterizationStateCreateInfo& vk_rasterizationState_,
+			const VkPipelineMultisampleStateCreateInfo& vk_multisampleState_,
+			const VkPipelineDepthStencilStateCreateInfo& vk_depthStencilState_,
+			const VkPipelineColorBlendStateCreateInfo& vk_colorBlendState_,
+			const VkPipelineLayout& vk_pipelineLayout_,
+			const VkRenderPass& vk_renderPass_,
+			const uint32_t subpass_
+		);
+		inline GraphicsPipelineCreateInfo(
+			const VkPipelineCreateFlags& flags_,
+			const Vector<VkPipelineShaderStageCreateInfo>& vk_stages_,
+			const VkPipelineVertexInputStateCreateInfo* vk_vertexInputState_,
+			const VkPipelineInputAssemblyStateCreateInfo* vk_inputAssemblyState_,
+			const VkPipelineTessellationStateCreateInfo* vk_tessellationState_,
+			const VkPipelineViewportStateCreateInfo* vk_viewportState_,
+			const VkPipelineRasterizationStateCreateInfo* vk_rasterizationState_,
+			const VkPipelineMultisampleStateCreateInfo* vk_multisampleState_,
+			const VkPipelineDepthStencilStateCreateInfo* vk_depthStencilState_,
+			const VkPipelineColorBlendStateCreateInfo* vk_colorBlendState_,
+			const VkPipelineDynamicStateCreateInfo* vk_dynamicState_,
+			const VkPipelineLayout& vk_pipelineLayout_,
+			const VkRenderPass& vk_renderPass_,
+			const uint32_t subpass_,
+			const VkPipeline vk_basePipeline_,
+			const int32_t basePipelineIndex_
+		);
+		inline GraphicsPipelineCreateInfo(const GraphicsPipelineCreateInfo&) = delete;
+		inline ~GraphicsPipelineCreateInfo() = default;
+	public:
+		inline GraphicsPipelineCreateInfo& operator = (const GraphicsPipelineCreateInfo&) = delete;
+	};
+	
+	class PipelineShaderStageCreateInfo:
+		public VkPipelineShaderStageCreateInfo
+	{
+	protected:
+		const String nameContainer;
+	public:
+		inline PipelineShaderStageCreateInfo() = delete;
+		inline PipelineShaderStageCreateInfo(
+			const VkShaderStageFlagBits& stage_,
+			const VkShaderModule& vk_shaderModule_,
+			const String& name_,
+			const VkSpecializationInfo* vk_specializationInfo_ = nullptr
+		);
+		inline PipelineShaderStageCreateInfo(const PipelineShaderStageCreateInfo&) = delete;
+		inline ~PipelineShaderStageCreateInfo() = default;
+	public:
+		inline PipelineShaderStageCreateInfo& operator = (const PipelineShaderStageCreateInfo&) = delete;
+	};
+	class PipelineVertexInputStateCreateInfo:
+		public VkPipelineVertexInputStateCreateInfo
+	{
+	public:
+		inline PipelineVertexInputStateCreateInfo() = delete;
+		inline PipelineVertexInputStateCreateInfo(const Vector<VkVertexInputBindingDescription>& bindings_, const Vector<VkVertexInputAttributeDescription>& attributes_);
+		inline PipelineVertexInputStateCreateInfo(const PipelineVertexInputStateCreateInfo&) = delete;
+		inline ~PipelineVertexInputStateCreateInfo() = default;
+	public:
+		inline PipelineVertexInputStateCreateInfo& operator = (const PipelineVertexInputStateCreateInfo&) = delete;
+	};
+	class PipelineInputAssemblyStateCreateInfo:
+		public VkPipelineInputAssemblyStateCreateInfo
+	{
+	public:
+		inline PipelineInputAssemblyStateCreateInfo() = delete;
+		inline PipelineInputAssemblyStateCreateInfo(const VkPrimitiveTopology& topology_, const VkBool32& isPrimitiveRestartEnabled_);
+		inline PipelineInputAssemblyStateCreateInfo(const PipelineInputAssemblyStateCreateInfo&) = delete;
+		inline ~PipelineInputAssemblyStateCreateInfo() = default;
+	public:
+		inline PipelineInputAssemblyStateCreateInfo& operator = (const PipelineInputAssemblyStateCreateInfo&) = delete;
+	};
+	class PipelineViewportStateCreateInfo:
+		public VkPipelineViewportStateCreateInfo
+	{
+	public:
+		inline PipelineViewportStateCreateInfo() = delete;
+		inline PipelineViewportStateCreateInfo(const Vector<VkViewport>& vk_viewports_, const Vector<VkRect2D>& vk_scissors_);
+		inline PipelineViewportStateCreateInfo(const PipelineViewportStateCreateInfo&) = delete;
+		inline ~PipelineViewportStateCreateInfo() = default;
+	public:
+		inline PipelineViewportStateCreateInfo& operator = (const PipelineViewportStateCreateInfo&) = delete;
+	};
+	class PipelineRasterizationStateCreateInfo:
+		public VkPipelineRasterizationStateCreateInfo
+	{
+	public:
+		inline PipelineRasterizationStateCreateInfo() = delete;
+		inline PipelineRasterizationStateCreateInfo(
+			const VkBool32& isDepthClampEnabled_,
+			const VkBool32& isRasterizationDiscardEnabled_,
+			const VkPolygonMode& polygonMode_,
+			const VkCullModeFlags& cullMode_,
+			const VkFrontFace& frontFace_,
+			const VkBool32& isDepthBiasEnabled_,
+			const float& depthBiasConstantFactor_,
+			const float& depthBiasClamp_,
+			const float& depthBiasSlopeFactor_,
+			const float& lineWidth_
+		);
+		inline PipelineRasterizationStateCreateInfo(const PipelineRasterizationStateCreateInfo&) = delete;
+		inline ~PipelineRasterizationStateCreateInfo() = default;
+	public:
+		inline PipelineRasterizationStateCreateInfo& operator = (const PipelineRasterizationStateCreateInfo&) = delete;
+	};
+	class PipelineMultisampleStateCreateInfo:
+		public VkPipelineMultisampleStateCreateInfo
+	{
+	public:
+		inline PipelineMultisampleStateCreateInfo() = delete;
+		inline PipelineMultisampleStateCreateInfo(
+			const VkSampleCountFlagBits& rasterizationSamples_,
+			const VkBool32& isSampleShadingEnable_,
+			const decltype(minSampleShading)& minSampleShading_,
+			const VkSampleMask* vk_sampleMask_,
+			const VkBool32& isAlphaToCoverageEnable_,
+			const VkBool32& isAlphaToOneEnable_
+		);
+		inline PipelineMultisampleStateCreateInfo(const PipelineMultisampleStateCreateInfo&) = delete;
+		inline ~PipelineMultisampleStateCreateInfo() = default;
+	public:
+		inline PipelineMultisampleStateCreateInfo& operator = (const PipelineMultisampleStateCreateInfo&) = delete;
+	};
+	class PipelineDepthStencilStateCreateInfo:
+		public VkPipelineDepthStencilStateCreateInfo
+	{
+	public:
+		inline PipelineDepthStencilStateCreateInfo() = delete;
+		inline PipelineDepthStencilStateCreateInfo(
+			const VkBool32& isDepthTestEnabled_,
+			const VkBool32& isDepthWriteEnabled_,
+			const VkCompareOp& depthCompareOp_,
+			const VkBool32& isDepthBoundTestEnabled_,
+			const VkBool32& isStencilTestEnabled_,
+			const VkStencilOpState& front_,
+			const VkStencilOpState& back_,
+			const float& minDepthBounds_,
+			const float& maxDepthBounds_
+		);
+		inline PipelineDepthStencilStateCreateInfo(const PipelineDepthStencilStateCreateInfo&) = delete;
+		inline ~PipelineDepthStencilStateCreateInfo() = default;
+	public:
+		inline PipelineDepthStencilStateCreateInfo& operator = (const PipelineDepthStencilStateCreateInfo&) = delete;
+	};
+	class PipelineColorBlendStateCreateInfo:
+		public VkPipelineColorBlendStateCreateInfo
+	{
+	public:
+		inline PipelineColorBlendStateCreateInfo() = delete;
+		inline PipelineColorBlendStateCreateInfo(
+			const VkBool32& isLogicOpEnabled_,
+			const VkLogicOp& logicOp_,
+			const Vector<VkPipelineColorBlendAttachmentState>& vk_colorBlendAttachmentStates_,
+			const Initializer<float>& blendConstants_ // size should be equal 4
+		);
+		inline PipelineColorBlendStateCreateInfo(const PipelineColorBlendStateCreateInfo&) = delete;
+		inline ~PipelineColorBlendStateCreateInfo() = default;
+	public:
+		inline PipelineColorBlendStateCreateInfo& operator = (const PipelineColorBlendStateCreateInfo&) = delete;
+	};
 
 	class CommandBufferAllocateInfo:
 		public VkCommandBufferAllocateInfo
@@ -332,6 +525,24 @@ namespace GreatVulkan
 	public:
 		inline Rect2D& operator = (const Rect2D&) = delete;
 	};
+	class Viewport:
+		public VkViewport
+	{
+	public:
+		inline Viewport() = delete;
+		inline Viewport(
+			const float&	x_,
+			const float&	y_,
+			const float&	width_,
+			const float&	height_,
+			const float&	minDepth_,
+			const float&	maxDepth_
+		);
+		inline Viewport(const Viewport&) = delete;
+		inline ~Viewport() = default;
+	public:
+		inline Viewport& operator = (const Viewport&) = delete;
+	};
 	class ClearValue
 	{
 	public:
@@ -342,6 +553,45 @@ namespace GreatVulkan
 		inline ~ClearValue() = default;
 	public:
 		inline ClearValue& operator = (const ClearValue&) = delete;
+	};
+	class StencilOpState:
+		public VkStencilOpState
+	{
+	public:
+		inline StencilOpState() = delete;
+		inline StencilOpState(
+			const VkStencilOp&	failOp_,
+			const VkStencilOp&	passOp_,
+			const VkStencilOp&	depthFailOp_,
+			const VkCompareOp&	compareOp_,
+			const uint32_t&		compareMask_,
+			const uint32_t&		writeMask_,
+			const uint32_t&		reference_
+		);
+		inline StencilOpState(const StencilOpState&) = delete;
+		inline ~StencilOpState() = default;
+	public:
+		inline StencilOpState& operator = (const StencilOpState&) = delete;
+	};
+	class PipelineColorBlendAttachmentState:
+		public VkPipelineColorBlendAttachmentState
+	{
+	public:
+		inline PipelineColorBlendAttachmentState() = delete;
+		inline PipelineColorBlendAttachmentState(
+			const VkBool32&					blendEnable_,
+			const VkBlendFactor&			srcColorBlendFactor_,
+			const VkBlendFactor&			dstColorBlendFactor_,
+			const VkBlendOp&				colorBlendOp_,
+			const VkBlendFactor&			srcAlphaBlendFactor_,
+			const VkBlendFactor&			dstAlphaBlendFactor_,
+			const VkBlendOp&				alphaBlendOp_,
+			const VkColorComponentFlags&	colorWriteMask_
+		);
+		inline PipelineColorBlendAttachmentState(const PipelineColorBlendAttachmentState&) = delete;
+		inline ~PipelineColorBlendAttachmentState() = default;
+	public:
+		inline PipelineColorBlendAttachmentState& operator = (const PipelineColorBlendAttachmentState&) = delete;
 	};
 	class ComponentMapping:
 		public VkComponentMapping
@@ -420,6 +670,37 @@ namespace GreatVulkan
 		inline ~SubpassDescription() = default;
 	public:
 		inline SubpassDescription& operator = (const SubpassDescription&) = delete;
+	};
+	class VertexInputBindingDescription:
+		public VkVertexInputBindingDescription
+	{
+	public:
+		inline VertexInputBindingDescription() = delete;
+		inline VertexInputBindingDescription(
+			const uint32_t& binding_,
+			const uint32_t& stride_,
+			const VkVertexInputRate& inputRate_
+		);
+		inline VertexInputBindingDescription(const VertexInputBindingDescription&) = delete;
+		inline ~VertexInputBindingDescription() = default;
+	public:
+		inline VertexInputBindingDescription& operator = (const VertexInputBindingDescription&) = delete;
+	};
+	class VertexInputAttributeDescription:
+		public VkVertexInputAttributeDescription
+	{
+	public:
+		inline VertexInputAttributeDescription() = delete;
+		inline VertexInputAttributeDescription(
+			const uint32_t& location_,
+			const uint32_t& binding_,
+			const VkFormat& format_,
+			const uint32_t& offset_
+		);
+		inline VertexInputAttributeDescription(const VertexInputAttributeDescription&) = delete;
+		inline ~VertexInputAttributeDescription() = default;
+	public:
+		inline VertexInputAttributeDescription& operator = (const VertexInputAttributeDescription&) = delete;
 	};
 
 #if VK_USE_PLATFORM_WIN32_KHR
@@ -541,6 +822,7 @@ namespace GreatVulkan
 	// Commands
 	inline void CmdBeginRenderPass(const VkCommandBuffer& vk_commandBuffer_, const VkRenderPassBeginInfo& vk_renderPassBeginInfo_, const VkSubpassContents& vk_subpassContents_);
 	inline void CmdEndRenderPass(const VkCommandBuffer& vk_commandBuffer_);
+	inline void CmdBindPipeline(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineBindPoint& vk_pipelineBindPoint_, const VkPipeline& vk_pipeline_);
 
 	// Fence
 	inline VkFence CreateFence(const VkDevice& vk_device_, const VkFenceCreateInfo& vk_fenceCreateInfo_);
@@ -558,6 +840,18 @@ namespace GreatVulkan
 	inline void* MapMemory(const VkDevice& vk_device_, const VkDeviceMemory& vk_deviceMemory_, const VkDeviceSize& offset_, const VkDeviceSize& size_, const VkMemoryMapFlags& flags_);
 	inline void UnmapMemory(const VkDevice& vk_device_, const VkDeviceMemory& vk_deviceMemory_);
 	inline void FreeMemory(const VkDevice& vk_device_, const VkDeviceMemory& vk_deviceMemory_);
+
+	// Shader Module
+	inline VkShaderModule CreateShaderModule(const VkDevice& vk_device_, const VkShaderModuleCreateInfo& vk_shaderModuleCreateInfo_);
+	inline void DestroyShaderModule(const VkDevice& vk_device_, const VkShaderModule& vk_shaderModule_);
+
+	// Pipeline Layout
+	inline VkPipelineLayout CreatePipelineLayout(const VkDevice& vk_device_, const VkPipelineLayoutCreateInfo& vk_pipelineLayoutCreateInfo_);
+	inline void DestroyPipelineLayout(const VkDevice& vk_device_, const VkPipelineLayout& vk_pipelineLayout_);
+	
+	// Pipeline
+	inline Vector<VkPipeline> CreateGraphicsPipelines(const VkDevice& vk_device_, const VkPipelineCache& vk_pipelineCache_, const Vector<VkGraphicsPipelineCreateInfo>& vk_createInfos_);
+	inline void DestroyPipeline(const VkDevice& vk_device_, const VkPipeline& vk_pipeline_);
 }
 
 
@@ -820,6 +1114,289 @@ inline GreatVulkan::BufferCreateInfo::BufferCreateInfo(
 
 #pragma endregion
 
+#pragma region ShaderModuleCreateInfo
+
+inline GreatVulkan::ShaderModuleCreateInfo::ShaderModuleCreateInfo(const Vector<uint32_t>& sourceCode_)
+{
+	sType		= VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	pNext		= nullptr;
+	flags		= 0;
+	codeSize	= sourceCode_.size();
+	pCode		= sourceCode_.data();
+}
+
+#pragma endregion
+
+#pragma region PipelineLayoutCreateInfo
+
+inline GreatVulkan::PipelineLayoutCreateInfo::PipelineLayoutCreateInfo(const Vector<VkDescriptorSetLayout>& vk_descriptorSetLayouts_, const Vector<VkPushConstantRange>& vk_pushConstantRanges_)
+{
+	sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pNext					= nullptr;
+	flags					= 0;
+	setLayoutCount			= vk_descriptorSetLayouts_.size();
+	pSetLayouts				= vk_descriptorSetLayouts_.data();
+	pushConstantRangeCount	= vk_pushConstantRanges_.size();
+	pPushConstantRanges		= vk_pushConstantRanges_.data();
+}
+
+#pragma endregion
+
+#pragma region GraphicsPipelineCreateInfo
+
+inline GreatVulkan::GraphicsPipelineCreateInfo::GraphicsPipelineCreateInfo(
+	const VkPipelineCreateFlags& flags_,
+	const Vector<VkPipelineShaderStageCreateInfo>& vk_stages_,
+	const VkPipelineVertexInputStateCreateInfo& vk_vertexInputState_,
+	const VkPipelineInputAssemblyStateCreateInfo& vk_inputAssemblyState_,
+	const VkPipelineViewportStateCreateInfo& vk_viewportState_,
+	const VkPipelineRasterizationStateCreateInfo& vk_rasterizationState_,
+	const VkPipelineMultisampleStateCreateInfo& vk_multisampleState_,
+	const VkPipelineDepthStencilStateCreateInfo& vk_depthStencilState_,
+	const VkPipelineColorBlendStateCreateInfo& vk_colorBlendState_,
+	const VkPipelineLayout& vk_pipelineLayout_,
+	const VkRenderPass& vk_renderPass_,
+	const uint32_t subpass_
+): GraphicsPipelineCreateInfo(
+	flags_,
+	vk_stages_,
+	&vk_vertexInputState_,
+	&vk_inputAssemblyState_,
+	nullptr,
+	&vk_viewportState_,
+	&vk_rasterizationState_,
+	&vk_multisampleState_,
+	&vk_depthStencilState_,
+	&vk_colorBlendState_,
+	nullptr,
+	vk_pipelineLayout_,
+	vk_renderPass_,
+	subpass_,
+	VK_NULL_HANDLE,
+	-1
+)
+{
+}
+inline GreatVulkan::GraphicsPipelineCreateInfo::GraphicsPipelineCreateInfo(
+	const VkPipelineCreateFlags& flags_,
+	const Vector<VkPipelineShaderStageCreateInfo>& vk_stages_,
+	const VkPipelineVertexInputStateCreateInfo* vk_vertexInputState_,
+	const VkPipelineInputAssemblyStateCreateInfo* vk_inputAssemblyState_,
+	const VkPipelineTessellationStateCreateInfo* vk_tessellationState_,
+	const VkPipelineViewportStateCreateInfo* vk_viewportState_,
+	const VkPipelineRasterizationStateCreateInfo* vk_rasterizationState_,
+	const VkPipelineMultisampleStateCreateInfo* vk_multisampleState_,
+	const VkPipelineDepthStencilStateCreateInfo* vk_depthStencilState_,
+	const VkPipelineColorBlendStateCreateInfo* vk_colorBlendState_,
+	const VkPipelineDynamicStateCreateInfo* vk_dynamicState_,
+	const VkPipelineLayout& vk_pipelineLayout_,
+	const VkRenderPass& vk_renderPass_,
+	const uint32_t subpass_,
+	const VkPipeline vk_basePipeline_,
+	const int32_t basePipelineIndex_
+) {
+	sType				= VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pNext				= nullptr;
+	flags				= flags_;
+	stageCount			= vk_stages_.size();
+	pStages				= vk_stages_.data();
+	pVertexInputState	= vk_vertexInputState_;
+	pInputAssemblyState	= vk_inputAssemblyState_;
+	pTessellationState	= vk_tessellationState_;
+	pViewportState		= vk_viewportState_;
+	pRasterizationState	= vk_rasterizationState_;
+	pMultisampleState	= vk_multisampleState_;
+	pDepthStencilState	= vk_depthStencilState_;
+	pColorBlendState	= vk_colorBlendState_;
+	pDynamicState		= vk_dynamicState_;
+	layout				= vk_pipelineLayout_;
+	renderPass			= vk_renderPass_;
+	subpass				= subpass_;
+	basePipelineHandle	= vk_basePipeline_;
+	basePipelineIndex	= basePipelineIndex_;
+}
+
+#pragma endregion
+
+#pragma region PipelineShaderStageCreateInfo
+
+inline GreatVulkan::PipelineShaderStageCreateInfo::PipelineShaderStageCreateInfo(
+	const VkShaderStageFlagBits& stage_,
+	const VkShaderModule& vk_shaderModule_,
+	const String& name_,
+	const VkSpecializationInfo* vk_specializationInfo_
+):
+	nameContainer(name_)
+{
+	sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	pNext					= nullptr;
+	flags					= 0;
+	stage					= stage_;
+	module					= vk_shaderModule_;
+	pName					= nameContainer.c_str();
+	pSpecializationInfo		= vk_specializationInfo_;
+}
+
+#pragma endregion
+
+#pragma region PipelineVertexInputStateCreateInfo
+
+inline GreatVulkan::PipelineVertexInputStateCreateInfo::PipelineVertexInputStateCreateInfo(const Vector<VkVertexInputBindingDescription>& bindings_, const Vector<VkVertexInputAttributeDescription>& attributes_)
+{
+	sType								= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	pNext								= nullptr;
+	flags								= 0;
+	vertexBindingDescriptionCount		= bindings_.size();
+	pVertexBindingDescriptions			= bindings_.data();
+	vertexAttributeDescriptionCount		= attributes_.size();
+	pVertexAttributeDescriptions		= attributes_.data();
+}
+
+#pragma endregion
+
+#pragma region PipelineInputAssemblyStateCreateInfo
+
+inline GreatVulkan::PipelineInputAssemblyStateCreateInfo::PipelineInputAssemblyStateCreateInfo(const VkPrimitiveTopology& topology_, const VkBool32& isPrimitiveRestartEnabled_)
+{
+	sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	pNext					= nullptr;
+	flags					= 0;
+	topology				= topology_;
+	primitiveRestartEnable	= isPrimitiveRestartEnabled_;
+}
+
+#pragma endregion
+
+#pragma region PipelineViewportStateCreateInfo
+
+inline GreatVulkan::PipelineViewportStateCreateInfo::PipelineViewportStateCreateInfo(const Vector<VkViewport>& vk_viewports_, const Vector<VkRect2D>& vk_scissors_)
+{
+	sType			= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	pNext			= nullptr;
+	flags			= 0;
+	viewportCount	= vk_viewports_.size();
+	pViewports		= vk_viewports_.data();
+	scissorCount	= vk_scissors_.size();
+	pScissors		= vk_scissors_.data();
+}
+
+#pragma endregion
+
+#pragma region PipelineViewportStateCreateInfo
+
+inline GreatVulkan::PipelineRasterizationStateCreateInfo::PipelineRasterizationStateCreateInfo(
+	const VkBool32& isDepthClampEnabled_,
+	const VkBool32& isRasterizationDiscardEnabled_,
+	const VkPolygonMode& polygonMode_,
+	const VkCullModeFlags& cullMode_,
+	const VkFrontFace& frontFace_,
+	const VkBool32& isDepthBiasEnabled_,
+	const float& depthBiasConstantFactor_,
+	const float& depthBiasClamp_,
+	const float& depthBiasSlopeFactor_,
+	const float& lineWidth_
+) {
+	sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	pNext					= nullptr;
+	flags					= 0;
+	depthClampEnable		= isDepthClampEnabled_;
+	rasterizerDiscardEnable	= isRasterizationDiscardEnabled_;
+	polygonMode				= polygonMode_;
+	cullMode				= cullMode_;
+	frontFace				= frontFace_;
+	depthBiasEnable			= isDepthBiasEnabled_;
+	depthBiasConstantFactor	= depthBiasConstantFactor_;
+	depthBiasClamp			= depthBiasClamp_;
+	depthBiasSlopeFactor	= depthBiasSlopeFactor_;
+	lineWidth				= lineWidth_;
+}
+
+#pragma endregion
+
+#pragma region PipelineMultisampleStateCreateInfo
+
+inline GreatVulkan::PipelineMultisampleStateCreateInfo::PipelineMultisampleStateCreateInfo(
+	const VkSampleCountFlagBits& rasterizationSamples_,
+	const VkBool32& isSampleShadingEnable_,
+	const decltype(minSampleShading)& minSampleShading_,
+	const VkSampleMask* vk_sampleMask_,
+	const VkBool32& isAlphaToCoverageEnable_,
+	const VkBool32& isAlphaToOneEnable_
+) {
+	sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	pNext					= nullptr;
+	flags					= 0;
+	rasterizationSamples	= rasterizationSamples_;
+	sampleShadingEnable		= isSampleShadingEnable_;
+	minSampleShading		= minSampleShading_;
+	pSampleMask				= vk_sampleMask_;
+	alphaToCoverageEnable	= isAlphaToCoverageEnable_;
+	alphaToOneEnable		= isAlphaToOneEnable_;
+}
+
+#pragma endregion
+
+#pragma region PipelineDepthStencilStateCreateInfo
+
+inline GreatVulkan::PipelineDepthStencilStateCreateInfo::PipelineDepthStencilStateCreateInfo(
+	const VkBool32& isDepthTestEnabled_,
+	const VkBool32& isDepthWriteEnabled_,
+	const VkCompareOp& depthCompareOp_,
+	const VkBool32& isDepthBoundTestEnabled_,
+	const VkBool32& isStencilTestEnabled_,
+	const VkStencilOpState& front_,
+	const VkStencilOpState& back_,
+	const float& minDepthBounds_,
+	const float& maxDepthBounds_
+) {
+	sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	pNext					= nullptr;
+	flags					= 0;
+	depthTestEnable			= isDepthTestEnabled_;
+	depthWriteEnable		= isDepthWriteEnabled_;
+	depthCompareOp			= depthCompareOp_;
+	depthBoundsTestEnable	= isDepthBoundTestEnabled_;
+	stencilTestEnable		= isStencilTestEnabled_;
+	front					= front_;
+	back					= back_;
+	minDepthBounds			= minDepthBounds_;
+	maxDepthBounds			= maxDepthBounds_;
+}
+
+#pragma endregion
+
+#pragma region PipelineColorBlendStateCreateInfo
+
+inline GreatVulkan::PipelineColorBlendStateCreateInfo::PipelineColorBlendStateCreateInfo(
+	const VkBool32& isLogicOpEnabled_,
+	const VkLogicOp& logicOp_,
+	const Vector<VkPipelineColorBlendAttachmentState>& vk_colorBlendAttachmentStates_,
+	const Initializer<float>& blendConstants_
+) {
+	sType					= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+	pNext					= nullptr;
+	flags					= 0;
+	logicOpEnable			= isLogicOpEnabled_;
+	logicOp					= logicOp_;
+	attachmentCount			= vk_colorBlendAttachmentStates_.size();
+	pAttachments			= vk_colorBlendAttachmentStates_.data();
+
+	if (blendConstants_.size() != 4)
+	{
+		throw Exception(); // TODO
+	}
+
+	auto it = blendConstants_.begin();
+
+	for (Size i = 0; i < 4; ++i)
+	{
+		blendConstants[i] = *it;
+		++it;
+	}
+}
+
+#pragma endregion
+
 #pragma region Win32SurfaceCreateInfoKHR
 
 #if VK_USE_PLATFORM_WIN32_KHR
@@ -1001,7 +1578,27 @@ inline GreatVulkan::Rect2D::Rect2D(const Offset& offset_, const Extent& extent_)
 
 #pragma endregion
 
-#pragma region Rect2D
+#pragma region Viewport
+
+inline GreatVulkan::Viewport::Viewport(
+	const float&	x_,
+	const float&	y_,
+	const float&	width_,
+	const float&	height_,
+	const float&	minDepth_,
+	const float&	maxDepth_
+) {
+	x			= x_;
+	y			= y_;
+	width		= width_;
+	height		= height_;
+	minDepth	= minDepth_;
+	maxDepth	= maxDepth_;
+}
+
+#pragma endregion
+
+#pragma region ClearValue
 
 inline VkClearValue GreatVulkan::ClearValue::Color(const float& r_, const float& g_, const float& b_, const float& a_)
 {
@@ -1013,6 +1610,52 @@ inline VkClearValue GreatVulkan::ClearValue::Color(const float& r_, const float&
 	vk_clearValue.color.float32[3] = a_;
 
 	return vk_clearValue;
+}
+
+#pragma endregion
+
+#pragma region StencilOpState
+
+inline GreatVulkan::StencilOpState::StencilOpState(
+	const VkStencilOp&	failOp_,
+	const VkStencilOp&	passOp_,
+	const VkStencilOp&	depthFailOp_,
+	const VkCompareOp&	compareOp_,
+	const uint32_t&		compareMask_,
+	const uint32_t&		writeMask_,
+	const uint32_t&		reference_
+) {
+	failOp		= failOp_;
+	passOp		= passOp_;
+	depthFailOp	= depthFailOp_;
+	compareOp	= compareOp_;
+	compareMask	= compareMask_;
+	writeMask	= writeMask_;
+	reference	= reference_;
+}
+
+#pragma endregion
+
+#pragma region PipelineColorBlendAttachmentState
+
+inline GreatVulkan::PipelineColorBlendAttachmentState::PipelineColorBlendAttachmentState(
+	const VkBool32&					blendEnable_,
+	const VkBlendFactor&			srcColorBlendFactor_,
+	const VkBlendFactor&			dstColorBlendFactor_,
+	const VkBlendOp&				colorBlendOp_,
+	const VkBlendFactor&			srcAlphaBlendFactor_,
+	const VkBlendFactor&			dstAlphaBlendFactor_,
+	const VkBlendOp&				alphaBlendOp_,
+	const VkColorComponentFlags&	colorWriteMask_
+) {
+	blendEnable = blendEnable_;
+	srcColorBlendFactor = srcColorBlendFactor_;
+	dstColorBlendFactor = dstColorBlendFactor_;
+	colorBlendOp = colorBlendOp_;
+	srcAlphaBlendFactor = srcAlphaBlendFactor_;
+	dstAlphaBlendFactor = dstAlphaBlendFactor_;
+	alphaBlendOp = alphaBlendOp_;
+	colorWriteMask = colorWriteMask_;
 }
 
 #pragma endregion
@@ -1107,6 +1750,37 @@ inline GreatVulkan::SubpassDescription::SubpassDescription(
 	pDepthStencilAttachment		= depthStencilAttachment_;
 	preserveAttachmentCount		= preserveAttachments_.size();
 	pPreserveAttachments		= preserveAttachments_.data();
+}
+
+#pragma endregion
+
+#pragma region VertexInputBindingDescription
+
+inline GreatVulkan::VertexInputBindingDescription::VertexInputBindingDescription(
+	const uint32_t& binding_,
+	const uint32_t& stride_,
+	const VkVertexInputRate& inputRate_
+) {
+	binding		= binding_;
+	stride		= stride_;
+	inputRate	= inputRate_;
+}
+
+#pragma endregion
+
+#pragma region VertexInputAttributeDescription
+
+inline GreatVulkan::VertexInputAttributeDescription::VertexInputAttributeDescription(
+	const uint32_t& location_,
+	const uint32_t& binding_,
+	const VkFormat& format_,
+	const uint32_t& offset_
+)
+{
+	location	= location_;
+	binding		= binding_;
+	format		= format_;
+	offset		= offset_;
 }
 
 #pragma endregion
@@ -1693,6 +2367,10 @@ inline void GreatVulkan::CmdEndRenderPass(const VkCommandBuffer& vk_commandBuffe
 {
 	vkCmdEndRenderPass(vk_commandBuffer_);
 }
+inline void GreatVulkan::CmdBindPipeline(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineBindPoint& vk_pipelineBindPoint_, const VkPipeline& vk_pipeline_)
+{
+	vkCmdBindPipeline(vk_commandBuffer_, vk_pipelineBindPoint_, vk_pipeline_);
+}
 
 // Fence
 inline VkFence GreatVulkan::CreateFence(const VkDevice& vk_device_, const VkFenceCreateInfo& vk_fenceCreateInfo_)
@@ -1798,6 +2476,63 @@ inline void GreatVulkan::UnmapMemory(const VkDevice& vk_device_, const VkDeviceM
 inline void GreatVulkan::FreeMemory(const VkDevice& vk_device_, const VkDeviceMemory& vk_deviceMemory_)
 {
 	vkFreeMemory(vk_device_, vk_deviceMemory_, nullptr);
+}
+
+// Shader Module
+inline VkShaderModule GreatVulkan::CreateShaderModule(const VkDevice& vk_device_, const VkShaderModuleCreateInfo& vk_shaderModuleCreateInfo_)
+{
+	VkShaderModule vk_shaderModule;
+
+	if (auto result = Result(vkCreateShaderModule(vk_device_, &vk_shaderModuleCreateInfo_, nullptr, &vk_shaderModule)))
+	{
+		return vk_shaderModule;
+	}
+	else
+	{
+		throw Exception();
+	}
+}
+inline void GreatVulkan::DestroyShaderModule(const VkDevice& vk_device_, const VkShaderModule& vk_shaderModule_)
+{
+	vkDestroyShaderModule(vk_device_, vk_shaderModule_, nullptr);
+}
+
+// Pipeline Layout
+inline VkPipelineLayout GreatVulkan::CreatePipelineLayout(const VkDevice& vk_device_, const VkPipelineLayoutCreateInfo& vk_pipelineLayoutCreateInfo_)
+{
+	VkPipelineLayout vk_pipelineLayout;
+
+	if (auto result = Result(vkCreatePipelineLayout(vk_device_, &vk_pipelineLayoutCreateInfo_, nullptr, &vk_pipelineLayout)))
+	{
+		return vk_pipelineLayout;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::DestroyPipelineLayout(const VkDevice& vk_device_, const VkPipelineLayout& vk_pipelineLayout_)
+{
+	vkDestroyPipelineLayout(vk_device_, vk_pipelineLayout_, nullptr);
+}
+
+// Pipeline
+inline GreatVulkan::Vector<VkPipeline> GreatVulkan::CreateGraphicsPipelines(const VkDevice& vk_device_, const VkPipelineCache& vk_pipelineCache_, const Vector<VkGraphicsPipelineCreateInfo>& vk_createInfos_)
+{
+	Vector<VkPipeline> vk_pipelines(vk_createInfos_.size());
+
+	if (auto result = Result(vkCreateGraphicsPipelines(vk_device_, vk_pipelineCache_, vk_createInfos_.size(), vk_createInfos_.data(), nullptr, vk_pipelines.data())))
+	{
+		return Move(vk_pipelines);
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::DestroyPipeline(const VkDevice& vk_device_, const VkPipeline& vk_pipeline_)
+{
+	vkDestroyPipeline(vk_device_, vk_pipeline_, nullptr);
 }
 
 #pragma endregion
