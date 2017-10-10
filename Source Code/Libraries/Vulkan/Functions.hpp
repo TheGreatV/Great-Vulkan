@@ -824,7 +824,9 @@ namespace GreatVulkan
 	inline void CmdEndRenderPass(const VkCommandBuffer& vk_commandBuffer_);
 	inline void CmdBindPipeline(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineBindPoint& vk_pipelineBindPoint_, const VkPipeline& vk_pipeline_);
 	inline void CmdBindVertexBuffers(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& firstBinding_, const uint32_t& bindingsCount_, const Vector<VkBuffer>& vk_buffers_, const Vector<VkDeviceSize>& offsets_);
+	inline void CmdBindIndexBuffer(const VkCommandBuffer& vk_commandBuffer_, const VkBuffer& vk_buffer_, const VkDeviceSize& offset_, const VkIndexType& vk_indexType_);
 	inline void CmdDraw(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& verticesCount_, const uint32_t& indicesCount_, const uint32_t& firstVertex_, const uint32_t& firstIndex_);
+	inline void	CmdDrawIndexed(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& indexCount_, const uint32_t& instanceCount_, const uint32_t& firstIndex_, const int32_t& vertexOffset_, const uint32_t& firstInstance_);
 
 	// Fence
 	inline VkFence CreateFence(const VkDevice& vk_device_, const VkFenceCreateInfo& vk_fenceCreateInfo_);
@@ -2378,9 +2380,17 @@ inline void GreatVulkan::CmdBindVertexBuffers(const VkCommandBuffer& vk_commandB
 {
 	vkCmdBindVertexBuffers(vk_commandBuffer_, firstBinding_, bindingsCount_, vk_buffers_.data(), offsets_.data());
 }
+inline void GreatVulkan::CmdBindIndexBuffer(const VkCommandBuffer& vk_commandBuffer_, const VkBuffer& vk_buffer_, const VkDeviceSize& offset_, const VkIndexType& vk_indexType_)
+{
+	vkCmdBindIndexBuffer(vk_commandBuffer_, vk_buffer_, offset_, vk_indexType_);
+}
 inline void GreatVulkan::CmdDraw(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& verticesCount_, const uint32_t& indicesCount_, const uint32_t& firstVertex_, const uint32_t& firstIndex_)
 {
 	vkCmdDraw(vk_commandBuffer_, verticesCount_, indicesCount_, firstVertex_, firstIndex_);
+}
+inline void	GreatVulkan::CmdDrawIndexed(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& indexCount_, const uint32_t& instanceCount_, const uint32_t& firstIndex_, const int32_t& vertexOffset_, const uint32_t& firstInstance_)
+{
+	vkCmdDrawIndexed(vk_commandBuffer_, indexCount_, instanceCount_, firstIndex_, vertexOffset_, firstInstance_);
 }
 
 // Fence
