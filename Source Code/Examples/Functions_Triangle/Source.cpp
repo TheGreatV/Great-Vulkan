@@ -12,6 +12,37 @@ using namespace GreatVulkan;
 
 void func()
 {
+	// shaders loader
+	auto loadShader = [](const String& filename)
+	{
+		FILE* file = nullptr;
+
+		auto loadResult = fopen_s(&file, filename.c_str(), "rb");
+
+		if (loadResult != 0)
+		{
+			throw std::exception("failed to load file");
+		}
+
+		fseek(file, 0, FILE_END);
+		
+		auto size = ftell(file);
+		
+		if (size % 4 != 0)
+		{
+			throw Exception(); // TODO
+		}
+
+		rewind(file);
+
+		std::vector<uint32_t> result(size);
+		fread((void*)result.data(), 1, size, file);
+
+		fclose(file);
+
+		return Move(result);
+	};
+
 	// common stuff
 	VkExtent2D windowSize;
 	{
@@ -218,8 +249,23 @@ void func()
 		}
 	}
 
+	// Data
+	Size vertexStride = sizeof(float)* 2;
+	Vector<uint8_t> vertices(vertexStride * 3);
+	{
+		*reinterpret_cast<float*>(vertices.data() + vertexStride * 0 + 0)		= -0.5f;
+		*reinterpret_cast<float*>(vertices.data() + vertexStride * 0 + 4)		= +0.5f;
+
+		*reinterpret_cast<float*>(vertices.data() + vertexStride * 1 + 0)		= +0.5f;
+		*reinterpret_cast<float*>(vertices.data() + vertexStride * 1 + 4)		= +0.5f;
+		
+		*reinterpret_cast<float*>(vertices.data() + vertexStride * 2 + 0)		= +0.0f;
+		*reinterpret_cast<float*>(vertices.data() + vertexStride * 2 + 4)		= -0.5f;
+	}
+	Size verticesMemoryTotalSize = sizeof(uint8_t) * vertices.size();
+
 	// Buffers
-	auto vk_vertexBuffer = CreateBuffer(vk_device, BufferCreateInfo(0, 1, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VkSharingMode::VK_SHARING_MODE_EXCLUSIVE));
+	auto vk_vertexBuffer = CreateBuffer(vk_device, BufferCreateInfo(0, verticesMemoryTotalSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VkSharingMode::VK_SHARING_MODE_EXCLUSIVE));
 	auto vk_vertexBufferDeviceMemory = [&](){
 		auto vk_memoryRequirements = GetBufferMemoryRequirements(vk_device, vk_vertexBuffer);
 		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
@@ -229,12 +275,16 @@ void func()
 
 		auto data = MapMemory(vk_device, vk_deviceMemory, 0, 1, 0);
 
-		std::memset(data, 0, 1);
+		std::memcpy(data, vertices.data(), verticesMemoryTotalSize);
 
 		UnmapMemory(vk_device, vk_deviceMemory);
 
 		return vk_deviceMemory;
 	}();
+
+	// Shaders
+	auto vk_vertexShaderModule = CreateShaderModule(vk_device, ShaderModuleCreateInfo(Move(loadShader("../../../../../Media/Shaders/Functions_Triangle/1.spir-v.vs"))));
+	auto vk_fragmentShaderModule = CreateShaderModule(vk_device, ShaderModuleCreateInfo(Move(loadShader("../../../../../Media/Shaders/Functions_Triangle/1.spir-v.fs"))));
 
 	// RenderPass
 	auto vk_renderPass = CreateRenderPass(vk_device, RenderPassCreateInfo(
@@ -256,6 +306,77 @@ void func()
 			})
 		}
 	));
+
+	// Pipeline
+	auto vk_pipelineLayout = CreatePipelineLayout(vk_device, PipelineLayoutCreateInfo({}, {}));
+	auto vk_pipelines = Move(CreateGraphicsPipelines(vk_device, VK_NULL_HANDLE, 
+		{
+			GraphicsPipelineCreateInfo(
+				0,
+				{
+					PipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, vk_vertexShaderModule, "main"),
+					PipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, vk_fragmentShaderModule, "main"),
+				},
+				PipelineVertexInputStateCreateInfo(
+					{
+						VertexInputBindingDescription(0, vertexStride, VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX),
+					},
+					{
+						VertexInputAttributeDescription(0, 0, VkFormat::VK_FORMAT_R32G32_SFLOAT, 0),
+					}
+				),
+				PipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE),
+				PipelineViewportStateCreateInfo(
+					{
+						Viewport(0, 0, static_cast<float>(vk_surfaceCapabilities.currentExtent.width), static_cast<float>(vk_surfaceCapabilities.currentExtent.height), 0.0f, 1.0f),
+					},
+					{
+						Rect2D(Offset2D(0, 0), Extent2D(vk_surfaceCapabilities.currentExtent.width, vk_surfaceCapabilities.currentExtent.height)),
+					}
+				),
+				PipelineRasterizationStateCreateInfo(
+					VK_FALSE, VK_FALSE,
+					VkPolygonMode::VK_POLYGON_MODE_FILL, VkCullModeFlagBits::VK_CULL_MODE_NONE, VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE,
+					VK_FALSE, 0.0f, 0.0f, 0.0f, 1.0f
+				),
+				PipelineMultisampleStateCreateInfo(
+					VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+					VK_FALSE, 0.0f, nullptr, VK_FALSE, VK_FALSE
+				),
+				PipelineDepthStencilStateCreateInfo(
+					VK_FALSE, VK_FALSE, VkCompareOp::VK_COMPARE_OP_ALWAYS, VK_FALSE,
+					VK_FALSE,
+					StencilOpState(VkStencilOp::VK_STENCIL_OP_KEEP, VkStencilOp::VK_STENCIL_OP_KEEP, VkStencilOp::VK_STENCIL_OP_KEEP, VkCompareOp::VK_COMPARE_OP_ALWAYS, 0, 0, 0),
+					StencilOpState(VkStencilOp::VK_STENCIL_OP_KEEP, VkStencilOp::VK_STENCIL_OP_KEEP, VkStencilOp::VK_STENCIL_OP_KEEP, VkCompareOp::VK_COMPARE_OP_ALWAYS, 0, 0, 0),
+					0.0f,
+					0.0f
+				),
+				PipelineColorBlendStateCreateInfo(
+					VK_FALSE, VkLogicOp::VK_LOGIC_OP_CLEAR,
+					{
+						PipelineColorBlendAttachmentState(
+							VK_FALSE,
+							VkBlendFactor::VK_BLEND_FACTOR_ONE,
+							VkBlendFactor::VK_BLEND_FACTOR_ONE,
+							VkBlendOp::VK_BLEND_OP_ADD,
+							VkBlendFactor::VK_BLEND_FACTOR_ONE,
+							VkBlendFactor::VK_BLEND_FACTOR_ONE,
+							VkBlendOp::VK_BLEND_OP_ADD,
+							VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT | VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT | VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT
+						),
+					},
+					{0.0f, 0.0f, 0.0f, 0.0f}
+				),
+				vk_pipelineLayout,
+				vk_renderPass,
+				0
+			),
+		}
+	));
+	auto &vk_pipeline = vk_pipelines[0];
+
+	DestroyShaderModule(vk_device, vk_vertexShaderModule);
+	DestroyShaderModule(vk_device, vk_fragmentShaderModule);
 
 	// Framebuffers
 	Vector<VkFramebuffer> vk_framebuffers(vk_swapchainImageViews.size());
@@ -299,6 +420,8 @@ void func()
 				VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE
 			);
 
+			CmdBindPipeline(vk_commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
+
 			CmdEndRenderPass(vk_commandBuffer);
 
 			EndCommandBuffer(vk_commandBuffer);
@@ -337,6 +460,8 @@ void func()
 	DestroyFence(vk_device, vk_fence);
 	FreeCommandBuffers(vk_device, vk_commandPool, vk_commandBuffers);
 	DestroyCommandPool(vk_device, vk_commandPool); // TODO: crash when attempting to destroy pool without any buffers allocated
+	DestroyPipeline(vk_device, vk_pipeline);
+	DestroyPipelineLayout(vk_device, vk_pipelineLayout);
 	DestroyRenderPass(vk_device, vk_renderPass);
 	FreeMemory(vk_device, vk_vertexBufferDeviceMemory);
 	DestroyBuffer(vk_device, vk_vertexBuffer);
