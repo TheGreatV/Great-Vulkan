@@ -823,6 +823,8 @@ namespace GreatVulkan
 	inline void CmdBeginRenderPass(const VkCommandBuffer& vk_commandBuffer_, const VkRenderPassBeginInfo& vk_renderPassBeginInfo_, const VkSubpassContents& vk_subpassContents_);
 	inline void CmdEndRenderPass(const VkCommandBuffer& vk_commandBuffer_);
 	inline void CmdBindPipeline(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineBindPoint& vk_pipelineBindPoint_, const VkPipeline& vk_pipeline_);
+	inline void CmdBindVertexBuffers(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& firstBinding_, const uint32_t& bindingsCount_, const Vector<VkBuffer>& vk_buffers_, const Vector<VkDeviceSize>& offsets_);
+	inline void CmdDraw(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& verticesCount_, const uint32_t& indicesCount_, const uint32_t& firstVertex_, const uint32_t& firstIndex_);
 
 	// Fence
 	inline VkFence CreateFence(const VkDevice& vk_device_, const VkFenceCreateInfo& vk_fenceCreateInfo_);
@@ -833,6 +835,7 @@ namespace GreatVulkan
 	// Buffer
 	inline VkBuffer CreateBuffer(const VkDevice& vk_device_, const VkBufferCreateInfo& vk_bufferCreateInfo_);
 	inline VkMemoryRequirements GetBufferMemoryRequirements(const VkDevice& vk_device_, const VkBuffer& vk_buffer_);
+	inline void BindBufferMemory(const VkDevice& vk_device_, const VkBuffer& vk_buffer_, const VkDeviceMemory& vk_deviceMemory_);
 	inline void DestroyBuffer(const VkDevice& vk_device_, const VkBuffer& vk_buffer_);
 
 	// Device Memory
@@ -2371,6 +2374,14 @@ inline void GreatVulkan::CmdBindPipeline(const VkCommandBuffer& vk_commandBuffer
 {
 	vkCmdBindPipeline(vk_commandBuffer_, vk_pipelineBindPoint_, vk_pipeline_);
 }
+inline void GreatVulkan::CmdBindVertexBuffers(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& firstBinding_, const uint32_t& bindingsCount_, const Vector<VkBuffer>& vk_buffers_, const Vector<VkDeviceSize>& offsets_)
+{
+	vkCmdBindVertexBuffers(vk_commandBuffer_, firstBinding_, bindingsCount_, vk_buffers_.data(), offsets_.data());
+}
+inline void GreatVulkan::CmdDraw(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& verticesCount_, const uint32_t& indicesCount_, const uint32_t& firstVertex_, const uint32_t& firstIndex_)
+{
+	vkCmdDraw(vk_commandBuffer_, verticesCount_, indicesCount_, firstVertex_, firstIndex_);
+}
 
 // Fence
 inline VkFence GreatVulkan::CreateFence(const VkDevice& vk_device_, const VkFenceCreateInfo& vk_fenceCreateInfo_)
@@ -2437,6 +2448,13 @@ inline VkMemoryRequirements GreatVulkan::GetBufferMemoryRequirements(const VkDev
 	vkGetBufferMemoryRequirements(vk_device_, vk_buffer_, &vk_memoryRequirements);
 
 	return vk_memoryRequirements;
+}
+inline void GreatVulkan::BindBufferMemory(const VkDevice& vk_device_, const VkBuffer& vk_buffer_, const VkDeviceMemory& vk_deviceMemory_)
+{
+	if (auto result = Result(vkBindBufferMemory(vk_device_, vk_buffer_, vk_deviceMemory_, 0))); else
+	{
+		throw Exception(); // TODO
+	}
 }
 inline void GreatVulkan::DestroyBuffer(const VkDevice& vk_device_, const VkBuffer& vk_buffer_)
 {
