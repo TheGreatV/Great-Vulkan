@@ -282,7 +282,29 @@ namespace GreatVulkan
 	public:
 		inline GraphicsPipelineCreateInfo& operator = (const GraphicsPipelineCreateInfo&) = delete;
 	};
-	
+	class DescriptorPoolCreateInfo:
+		public VkDescriptorPoolCreateInfo
+	{
+	public:
+		inline DescriptorPoolCreateInfo() = delete;
+		inline DescriptorPoolCreateInfo(const VkDescriptorPoolCreateFlags& flags_, const uint32_t& maxSets_, const Vector<VkDescriptorPoolSize>& vk_descriptorPoolSizes_);
+		inline DescriptorPoolCreateInfo(const DescriptorPoolCreateInfo&) = delete;
+		inline ~DescriptorPoolCreateInfo() = default;
+	public:
+		inline DescriptorPoolCreateInfo& operator = (const DescriptorPoolCreateInfo&) = delete;
+	};
+	class DescriptorSetLayoutCreateInfo:
+		public VkDescriptorSetLayoutCreateInfo
+	{
+	public:
+		inline DescriptorSetLayoutCreateInfo() = delete;
+		inline DescriptorSetLayoutCreateInfo(const VkDescriptorSetLayoutCreateFlags& flags_, const Vector<VkDescriptorSetLayoutBinding>& bindings_);
+		inline DescriptorSetLayoutCreateInfo(const DescriptorSetLayoutCreateInfo&) = delete;
+		inline ~DescriptorSetLayoutCreateInfo() = default;
+	public:
+		inline DescriptorSetLayoutCreateInfo& operator = (const DescriptorSetLayoutCreateInfo&) = delete;
+	};
+
 	class PipelineShaderStageCreateInfo:
 		public VkPipelineShaderStageCreateInfo
 	{
@@ -434,6 +456,17 @@ namespace GreatVulkan
 	public:
 		inline MemoryAllocateInfo& operator = (const MemoryAllocateInfo&) = delete;
 	};
+	class DescriptorSetAllocateInfo:
+		public VkDescriptorSetAllocateInfo
+	{
+	public:
+		inline DescriptorSetAllocateInfo() = delete;
+		inline DescriptorSetAllocateInfo(const VkDescriptorPool& vk_descriptorPool_, const Vector<VkDescriptorSetLayout>& vk_descriptorSetLayouts_);
+		inline DescriptorSetAllocateInfo(const DescriptorSetAllocateInfo&) = delete;
+		inline ~DescriptorSetAllocateInfo() = default;
+	public:
+		inline DescriptorSetAllocateInfo& operator = (const DescriptorSetAllocateInfo&) = delete;
+	};
 
 	class CommandBufferBeginInfo:
 		public VkCommandBufferBeginInfo
@@ -469,6 +502,17 @@ namespace GreatVulkan
 		inline ~SubmitInfo() = default;
 	public:
 		inline SubmitInfo& operator = (const SubmitInfo&) = delete;
+	};
+	class DescriptorBufferInfo:
+		public VkDescriptorBufferInfo
+	{
+	public:
+		inline DescriptorBufferInfo() = delete;
+		inline DescriptorBufferInfo(const VkBuffer& vk_buffer_, const VkDeviceSize& offset_ = 0, const VkDeviceSize& range_ = VK_WHOLE_SIZE);
+		inline DescriptorBufferInfo(const DescriptorBufferInfo&) = delete;
+		inline ~DescriptorBufferInfo() = default;
+	public:
+		inline DescriptorBufferInfo& operator = (const DescriptorBufferInfo&) = delete;
 	};
 
 	class PresentInfoKHR:
@@ -572,6 +616,17 @@ namespace GreatVulkan
 		inline ~StencilOpState() = default;
 	public:
 		inline StencilOpState& operator = (const StencilOpState&) = delete;
+	};
+	class DescriptorPoolSize:
+		public VkDescriptorPoolSize
+	{
+	public:
+		inline DescriptorPoolSize() = delete;
+		inline DescriptorPoolSize(const VkDescriptorType& type_, const uint32_t& count_);
+		inline DescriptorPoolSize(const DescriptorPoolSize&) = delete;
+		inline ~DescriptorPoolSize() = default;
+	public:
+		inline DescriptorPoolSize& operator = (const DescriptorPoolSize&) = delete;
 	};
 	class PipelineColorBlendAttachmentState:
 		public VkPipelineColorBlendAttachmentState
@@ -702,6 +757,51 @@ namespace GreatVulkan
 	public:
 		inline VertexInputAttributeDescription& operator = (const VertexInputAttributeDescription&) = delete;
 	};
+	class DescriptorSetLayoutBinding:
+		public VkDescriptorSetLayoutBinding
+	{
+	public:
+		inline DescriptorSetLayoutBinding() = delete;
+		inline DescriptorSetLayoutBinding(
+			const uint32_t&				binding_,
+			const VkDescriptorType&		descriptorType_,
+			const uint32_t&				descriptorCount_,
+			const VkShaderStageFlags&	stageFlags_,
+			const VkSampler*			immutableSamplers_ = nullptr
+		);
+		inline DescriptorSetLayoutBinding(const DescriptorSetLayoutBinding&) = delete;
+		inline ~DescriptorSetLayoutBinding() = default;
+	public:
+		inline DescriptorSetLayoutBinding& operator = (const DescriptorSetLayoutBinding&) = delete;
+	};
+	class WriteDescriptorSet:
+		public VkWriteDescriptorSet
+	{
+	public:
+		inline WriteDescriptorSet() = delete;
+		inline WriteDescriptorSet(
+			const VkDescriptorSet& vk_descriptorSet_,
+			const uint32_t& binding_,
+			const uint32_t& first_,
+			const VkDescriptorType& vk_descriptorType_,
+			const Vector<VkDescriptorBufferInfo>& vk_descriptorBufferInfos_
+		);
+		inline WriteDescriptorSet(const WriteDescriptorSet&) = delete;
+		inline ~WriteDescriptorSet() = default;
+	public:
+		inline WriteDescriptorSet& operator = (const WriteDescriptorSet&) = delete;
+	};
+	class PushConstantRange:
+		public VkPushConstantRange
+	{
+	public:
+		inline PushConstantRange() = delete;
+		inline PushConstantRange(const VkShaderStageFlags& stageFlags_, const uint32_t& offset_, const uint32_t& size_); // offset_ and size_ should be multiple of 4
+		inline PushConstantRange(const PushConstantRange&) = delete;
+		inline ~PushConstantRange() = default;
+	public:
+		inline PushConstantRange& operator = (const PushConstantRange&) = delete;
+	};
 
 #if VK_USE_PLATFORM_WIN32_KHR
 	class Win32SurfaceCreateInfoKHR:
@@ -825,8 +925,11 @@ namespace GreatVulkan
 	inline void CmdBindPipeline(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineBindPoint& vk_pipelineBindPoint_, const VkPipeline& vk_pipeline_);
 	inline void CmdBindVertexBuffers(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& firstBinding_, const uint32_t& bindingsCount_, const Vector<VkBuffer>& vk_buffers_, const Vector<VkDeviceSize>& offsets_);
 	inline void CmdBindIndexBuffer(const VkCommandBuffer& vk_commandBuffer_, const VkBuffer& vk_buffer_, const VkDeviceSize& offset_, const VkIndexType& vk_indexType_);
+	inline void CmdBindDescriptorSets(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineBindPoint& vk_pipelineBindPoint_, const VkPipelineLayout& vk_pipelineLayout_, const uint32_t& firstSet_, const Vector<VkDescriptorSet>& vk_descriptorSets_, const Vector<uint32_t>& dynamicOffsets_);
 	inline void CmdDraw(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& verticesCount_, const uint32_t& indicesCount_, const uint32_t& firstVertex_, const uint32_t& firstIndex_);
 	inline void	CmdDrawIndexed(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& indexCount_, const uint32_t& instanceCount_, const uint32_t& firstIndex_, const int32_t& vertexOffset_, const uint32_t& firstInstance_);
+	template<class T>
+	inline void CmdPushConstants(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineLayout& vk_pipelineLayout_, const VkShaderStageFlags& stageFlags_, const uint32_t& offset_, const Vector<T>& values_);
 
 	// Fence
 	inline VkFence CreateFence(const VkDevice& vk_device_, const VkFenceCreateInfo& vk_fenceCreateInfo_);
@@ -857,6 +960,19 @@ namespace GreatVulkan
 	// Pipeline
 	inline Vector<VkPipeline> CreateGraphicsPipelines(const VkDevice& vk_device_, const VkPipelineCache& vk_pipelineCache_, const Vector<VkGraphicsPipelineCreateInfo>& vk_createInfos_);
 	inline void DestroyPipeline(const VkDevice& vk_device_, const VkPipeline& vk_pipeline_);
+
+	// Descriptor Pool
+	inline VkDescriptorPool CreateDescriptorPool(const VkDevice& vk_device_, const VkDescriptorPoolCreateInfo& vk_descriptorPoolCreateInfo_);
+	inline void DestroyDescriptorPool(const VkDevice& vk_device_, const VkDescriptorPool& vk_descriptorPool_);
+
+	// Descriptor Set Layout
+	inline VkDescriptorSetLayout CreateDescriptorSetLayout(const VkDevice& vk_device_, const VkDescriptorSetLayoutCreateInfo& vk_descriptorSetLayoutCreateInfo_);
+	inline void DestroyDescriptorSetLayout(const VkDevice& vk_device_, const VkDescriptorSetLayout& vk_descriptorSetLayout_);
+
+	// Descriptor Set
+	inline Vector<VkDescriptorSet> AllocateDescriptorSets(const VkDevice& vk_device_, const VkDescriptorSetAllocateInfo& vk_descriptorSetAllocateInfo_);
+	inline void UpdateDescriptorSets(const VkDevice& vk_device_, const Vector<VkWriteDescriptorSet> vk_writeDescriptorSets_, const Vector<VkCopyDescriptorSet>& vk_copyDescriptorSet_);
+	inline void FreeDescriptorSets(const VkDevice& vk_device_, const VkDescriptorPool& vk_descriptorPool_, const Vector<VkDescriptorSet>& vk_descriptorSets_);
 }
 
 
@@ -1223,6 +1339,33 @@ inline GreatVulkan::GraphicsPipelineCreateInfo::GraphicsPipelineCreateInfo(
 
 #pragma endregion
 
+#pragma region DescriptorPoolCreateInfo
+
+inline GreatVulkan::DescriptorPoolCreateInfo::DescriptorPoolCreateInfo(const VkDescriptorPoolCreateFlags& flags_, const uint32_t& maxSets_, const Vector<VkDescriptorPoolSize>& vk_descriptorPoolSizes_)
+{
+	sType			= VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	pNext			= nullptr;
+	flags			= VkDescriptorPoolCreateFlagBits::VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	maxSets			= 1;
+	poolSizeCount	= vk_descriptorPoolSizes_.size();
+	pPoolSizes		= vk_descriptorPoolSizes_.data();
+}
+
+#pragma endregion
+
+#pragma region DescriptorSetLayoutCreateInfo
+
+inline GreatVulkan::DescriptorSetLayoutCreateInfo::DescriptorSetLayoutCreateInfo(const VkDescriptorSetLayoutCreateFlags& flags_, const Vector<VkDescriptorSetLayoutBinding>& bindings_)
+{
+	sType			= VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	pNext			= nullptr;
+	flags			= flags_;
+	bindingCount	= bindings_.size();
+	pBindings		= bindings_.data();
+}
+
+#pragma endregion
+
 #pragma region PipelineShaderStageCreateInfo
 
 inline GreatVulkan::PipelineShaderStageCreateInfo::PipelineShaderStageCreateInfo(
@@ -1489,6 +1632,19 @@ inline GreatVulkan::MemoryAllocateInfo::MemoryAllocateInfo(const decltype(alloca
 
 #pragma endregion
 
+#pragma region DescriptorSetAllocateInfo
+
+inline GreatVulkan::DescriptorSetAllocateInfo::DescriptorSetAllocateInfo(const VkDescriptorPool& vk_descriptorPool_, const Vector<VkDescriptorSetLayout>& vk_descriptorSetLayouts_)
+{
+	sType				= VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	pNext				= nullptr;
+	descriptorPool		= vk_descriptorPool_;
+	descriptorSetCount	= vk_descriptorSetLayouts_.size();
+	pSetLayouts			= vk_descriptorSetLayouts_.data();
+}
+
+#pragma endregion
+
 #pragma region CommandBufferBeginInfo
 
 inline GreatVulkan::CommandBufferBeginInfo::CommandBufferBeginInfo(const VkCommandBufferUsageFlags& flags_, const VkCommandBufferInheritanceInfo& inheritanceInfo_):
@@ -1533,6 +1689,17 @@ inline GreatVulkan::SubmitInfo::SubmitInfo(const Vector<VkCommandBuffer>& vk_com
 	pCommandBuffers			= vk_commandBuffers_.data();
 	signalSemaphoreCount	= vk_signalSemaphores_.size();
 	pSignalSemaphores		= vk_signalSemaphores_.data();
+}
+
+#pragma endregion
+
+#pragma region DescriptorBufferInfo
+
+inline GreatVulkan::DescriptorBufferInfo::DescriptorBufferInfo(const VkBuffer& vk_buffer_, const VkDeviceSize& offset_, const VkDeviceSize& range_)
+{
+	buffer = vk_buffer_;
+	offset = offset_;
+	range = range_;
 }
 
 #pragma endregion
@@ -1637,6 +1804,16 @@ inline GreatVulkan::StencilOpState::StencilOpState(
 	compareMask	= compareMask_;
 	writeMask	= writeMask_;
 	reference	= reference_;
+}
+
+#pragma endregion
+
+#pragma region DescriptorPoolSize
+
+inline GreatVulkan::DescriptorPoolSize::DescriptorPoolSize(const VkDescriptorType& type_, const uint32_t& count_)
+{
+	type			= type_;
+	descriptorCount = count_;
 }
 
 #pragma endregion
@@ -1786,6 +1963,58 @@ inline GreatVulkan::VertexInputAttributeDescription::VertexInputAttributeDescrip
 	binding		= binding_;
 	format		= format_;
 	offset		= offset_;
+}
+
+#pragma endregion
+
+#pragma region DescriptorSetLayoutBinding
+
+inline GreatVulkan::DescriptorSetLayoutBinding::DescriptorSetLayoutBinding(
+	const uint32_t&				binding_,
+    const VkDescriptorType&		descriptorType_,
+    const uint32_t&				descriptorCount_,
+    const VkShaderStageFlags&	stageFlags_,
+    const VkSampler*			immutableSamplers_
+) {
+	binding				= binding_;
+	descriptorType		= descriptorType_;
+	descriptorCount		= descriptorCount_;
+	stageFlags			= stageFlags_;
+	pImmutableSamplers	= immutableSamplers_;
+}
+
+#pragma endregion
+
+#pragma region WriteDescriptorSet
+
+inline GreatVulkan::WriteDescriptorSet::WriteDescriptorSet(
+	const VkDescriptorSet& vk_descriptorSet_,
+	const uint32_t& binding_,
+	const uint32_t& first_,
+	const VkDescriptorType& vk_descriptorType_,
+	const Vector<VkDescriptorBufferInfo>& vk_descriptorBufferInfos_
+) {
+    sType				= VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    pNext				= nullptr;
+    dstSet				= vk_descriptorSet_;
+    dstBinding			= binding_;
+    dstArrayElement		= first_;
+    descriptorCount		= vk_descriptorBufferInfos_.size();
+    descriptorType		= vk_descriptorType_;
+    pImageInfo			= nullptr;
+    pBufferInfo			= vk_descriptorBufferInfos_.data();
+    pTexelBufferView	= nullptr;
+}
+
+#pragma endregion
+
+#pragma region PushConstantRange
+
+inline GreatVulkan::PushConstantRange::PushConstantRange(const VkShaderStageFlags& stageFlags_, const uint32_t& offset_, const uint32_t& size_)
+{
+	stageFlags = stageFlags_;
+	offset = offset_;
+	size = size_;
 }
 
 #pragma endregion
@@ -2384,6 +2613,10 @@ inline void GreatVulkan::CmdBindIndexBuffer(const VkCommandBuffer& vk_commandBuf
 {
 	vkCmdBindIndexBuffer(vk_commandBuffer_, vk_buffer_, offset_, vk_indexType_);
 }
+inline void GreatVulkan::CmdBindDescriptorSets(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineBindPoint& vk_pipelineBindPoint_, const VkPipelineLayout& vk_pipelineLayout_, const uint32_t& firstSet_, const Vector<VkDescriptorSet>& vk_descriptorSets_, const Vector<uint32_t>& dynamicOffsets_)
+{
+	vkCmdBindDescriptorSets(vk_commandBuffer_, vk_pipelineBindPoint_, vk_pipelineLayout_, firstSet_, vk_descriptorSets_.size(), vk_descriptorSets_.data(), dynamicOffsets_.size(), dynamicOffsets_.data());
+}
 inline void GreatVulkan::CmdDraw(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& verticesCount_, const uint32_t& indicesCount_, const uint32_t& firstVertex_, const uint32_t& firstIndex_)
 {
 	vkCmdDraw(vk_commandBuffer_, verticesCount_, indicesCount_, firstVertex_, firstIndex_);
@@ -2391,6 +2624,11 @@ inline void GreatVulkan::CmdDraw(const VkCommandBuffer& vk_commandBuffer_, const
 inline void	GreatVulkan::CmdDrawIndexed(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& indexCount_, const uint32_t& instanceCount_, const uint32_t& firstIndex_, const int32_t& vertexOffset_, const uint32_t& firstInstance_)
 {
 	vkCmdDrawIndexed(vk_commandBuffer_, indexCount_, instanceCount_, firstIndex_, vertexOffset_, firstInstance_);
+}
+template<class T>
+inline void GreatVulkan::CmdPushConstants(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineLayout& vk_pipelineLayout_, const VkShaderStageFlags& stageFlags_, const uint32_t& offset_, const Vector<T>& values_)
+{
+	vkCmdPushConstants(vk_commandBuffer_, vk_pipelineLayout_, stageFlags_, offset_, sizeof(T) * values_.size(), values_.data());
 }
 
 // Fence
@@ -2561,6 +2799,67 @@ inline GreatVulkan::Vector<VkPipeline> GreatVulkan::CreateGraphicsPipelines(cons
 inline void GreatVulkan::DestroyPipeline(const VkDevice& vk_device_, const VkPipeline& vk_pipeline_)
 {
 	vkDestroyPipeline(vk_device_, vk_pipeline_, nullptr);
+}
+
+// Descriptor Pool
+inline VkDescriptorPool GreatVulkan::CreateDescriptorPool(const VkDevice& vk_device_, const VkDescriptorPoolCreateInfo& vk_descriptorPoolCreateInfo_)
+{
+	VkDescriptorPool vk_descriptorPool;
+
+	if (auto result = Result(vkCreateDescriptorPool(vk_device_, &vk_descriptorPoolCreateInfo_, nullptr, &vk_descriptorPool)))
+	{
+		return vk_descriptorPool;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::DestroyDescriptorPool(const VkDevice& vk_device_, const VkDescriptorPool& vk_descriptorPool_)
+{
+	vkDestroyDescriptorPool(vk_device_, vk_descriptorPool_, nullptr);
+}
+
+// Descriptor Set Layout
+inline VkDescriptorSetLayout GreatVulkan::CreateDescriptorSetLayout(const VkDevice& vk_device_, const VkDescriptorSetLayoutCreateInfo& vk_descriptorSetLayoutCreateInfo_)
+{
+	VkDescriptorSetLayout vk_descriptorSetLayout;
+
+	if (auto result = Result(vkCreateDescriptorSetLayout(vk_device_, &vk_descriptorSetLayoutCreateInfo_, nullptr, &vk_descriptorSetLayout)))
+	{
+		return vk_descriptorSetLayout;
+	}
+	else
+	{
+		throw Exception();
+	}
+}
+inline void GreatVulkan::DestroyDescriptorSetLayout(const VkDevice& vk_device_, const VkDescriptorSetLayout& vk_descriptorSetLayout_)
+{
+	vkDestroyDescriptorSetLayout(vk_device_, vk_descriptorSetLayout_, nullptr);
+}
+
+// Descriptor Set
+inline GreatVulkan::Vector<VkDescriptorSet> GreatVulkan::AllocateDescriptorSets(const VkDevice& vk_device_, const VkDescriptorSetAllocateInfo& vk_descriptorSetAllocateInfo_)
+{
+	Vector<VkDescriptorSet> vk_descriptorSets(vk_descriptorSetAllocateInfo_.descriptorSetCount);
+
+	if (auto result = Result(vkAllocateDescriptorSets(vk_device_, &vk_descriptorSetAllocateInfo_, vk_descriptorSets.data())))
+	{
+		return Move(vk_descriptorSets);
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::UpdateDescriptorSets(const VkDevice& vk_device_, const Vector<VkWriteDescriptorSet> vk_writeDescriptorSets_, const Vector<VkCopyDescriptorSet>& vk_copyDescriptorSet_)
+{
+	vkUpdateDescriptorSets(vk_device_, vk_writeDescriptorSets_.size(), vk_writeDescriptorSets_.data(), vk_copyDescriptorSet_.size(), vk_copyDescriptorSet_.data());
+}
+inline void GreatVulkan::FreeDescriptorSets(const VkDevice& vk_device_, const VkDescriptorPool& vk_descriptorPool_, const Vector<VkDescriptorSet>& vk_descriptorSets_)
+{
+	vkFreeDescriptorSets(vk_device_, vk_descriptorPool_, vk_descriptorSets_.size(), vk_descriptorSets_.data());
 }
 
 #pragma endregion
