@@ -304,6 +304,69 @@ namespace GreatVulkan
 	public:
 		inline DescriptorSetLayoutCreateInfo& operator = (const DescriptorSetLayoutCreateInfo&) = delete;
 	};
+	class ImageCreateInfo:
+		public VkImageCreateInfo
+	{
+	public:
+		inline ImageCreateInfo() = delete;
+		inline ImageCreateInfo(
+			const VkImageCreateFlags& flags_,
+			const VkImageType& vk_imageType_,
+			const VkFormat& vk_format_,
+			const VkExtent3D& vk_extent_,
+			const uint32_t& mipLevels_,
+			const uint32_t& arrayLayers_,
+			const VkSampleCountFlagBits& vk_samples_,
+			const VkImageTiling& vk_tiling_,
+			const VkImageUsageFlags& vk_usage_,
+			const VkImageLayout& vk_initialLayout_
+		);
+		inline ImageCreateInfo(
+			const VkImageCreateFlags& flags_,
+			const VkImageType& vk_imageType_,
+			const VkFormat& vk_format_,
+			const VkExtent3D& vk_extent_,
+			const uint32_t& mipLevels_,
+			const uint32_t& arrayLayers_,
+			const VkSampleCountFlagBits& vk_samples_,
+			const VkImageTiling& vk_tiling_,
+			const VkImageUsageFlags& vk_usage_,
+			const VkSharingMode& vk_sharingMode_,
+			const Vector<uint32_t>& queueFamilyIndices_,
+			const VkImageLayout& vk_initialLayout_
+		);
+		inline ImageCreateInfo(const ImageCreateInfo&) = delete;
+		inline ~ImageCreateInfo() = default;
+	public:
+		inline ImageCreateInfo& operator = (const ImageCreateInfo&) = delete;
+	};
+	class SamplerCreateInfo:
+		public VkSamplerCreateInfo
+	{
+	public:
+		inline SamplerCreateInfo() = delete;
+		inline SamplerCreateInfo(
+			const VkFilter& magnificationFilter_,
+			const VkFilter& minificationFilter_,
+			const VkSamplerMipmapMode& mipmapMode_,
+			const VkSamplerAddressMode& addressModeU_,
+			const VkSamplerAddressMode& addressModeV_,
+			const VkSamplerAddressMode& addressModeW_,
+			const float& mipmapLodBias_,
+			const VkBool32 isAnisotropyEnabled_,
+			const float& maxAnisotropy_,
+			const VkBool32& isCompareEnabled_,
+			const VkCompareOp& compareOp_,
+			const float& minLod_,
+			const float& maxLod_,
+			const VkBorderColor& borderColor_,
+			const VkBool32& isUnnormalizedCoordinates_
+		);
+		inline SamplerCreateInfo(const SamplerCreateInfo&) = delete;
+		inline ~SamplerCreateInfo() = default;
+	public:
+		inline SamplerCreateInfo& operator = (const SamplerCreateInfo&) = delete;
+	};
 
 	class PipelineShaderStageCreateInfo:
 		public VkPipelineShaderStageCreateInfo
@@ -503,6 +566,17 @@ namespace GreatVulkan
 	public:
 		inline SubmitInfo& operator = (const SubmitInfo&) = delete;
 	};
+	class DescriptorImageInfo:
+		public VkDescriptorImageInfo
+	{
+	public:
+		inline DescriptorImageInfo() = delete;
+		inline DescriptorImageInfo(const VkSampler& vk_sampler_, const VkImageView& vk_imageView_, const VkImageLayout& vk_imageLayout_);
+		inline DescriptorImageInfo(const DescriptorImageInfo&) = delete;
+		inline ~DescriptorImageInfo() = default;
+	public:
+		inline DescriptorImageInfo& operator = (const DescriptorImageInfo&) = delete;
+	};
 	class DescriptorBufferInfo:
 		public VkDescriptorBufferInfo
 	{
@@ -541,6 +615,21 @@ namespace GreatVulkan
 	public:
 		inline Offset2D& operator = (const Offset2D&) = delete;
 	};
+	class Offset3D:
+		public VkOffset3D
+	{
+	public:
+		using X = decltype(x);
+		using Y = decltype(y);
+		using Z = decltype(z);
+	public:
+		inline Offset3D() = delete;
+		inline Offset3D(const X& x_, const Y& y_, const Z& z_);
+		inline Offset3D(const Offset3D&) = delete;
+		inline ~Offset3D() = default;
+	public:
+		inline Offset3D& operator = (const Offset3D&) = delete;
+	};
 	class Extent2D:
 		public VkExtent2D
 	{
@@ -554,6 +643,21 @@ namespace GreatVulkan
 		inline ~Extent2D() = default;
 	public:
 		inline Extent2D& operator = (const Extent2D&) = delete;
+	};
+	class Extent3D:
+		public VkExtent3D
+	{
+	public:
+		using Width = decltype(width);
+		using Height = decltype(height);
+		using Depth = decltype(depth);
+	public:
+		inline Extent3D() = delete;
+		inline Extent3D(const Width& width_, const Height& height_, const Depth& depth_);
+		inline Extent3D(const Extent3D&) = delete;
+		inline ~Extent3D() = default;
+	public:
+		inline Extent3D& operator = (const Extent3D&) = delete;
 	};
 	class Rect2D:
 		public VkRect2D
@@ -784,6 +888,13 @@ namespace GreatVulkan
 			const uint32_t& binding_,
 			const uint32_t& first_,
 			const VkDescriptorType& vk_descriptorType_,
+			const Vector<VkDescriptorImageInfo>& vk_descriptorImageInfo_
+		);
+		inline WriteDescriptorSet(
+			const VkDescriptorSet& vk_descriptorSet_,
+			const uint32_t& binding_,
+			const uint32_t& first_,
+			const VkDescriptorType& vk_descriptorType_,
 			const Vector<VkDescriptorBufferInfo>& vk_descriptorBufferInfos_
 		);
 		inline WriteDescriptorSet(const WriteDescriptorSet&) = delete;
@@ -801,6 +912,74 @@ namespace GreatVulkan
 		inline ~PushConstantRange() = default;
 	public:
 		inline PushConstantRange& operator = (const PushConstantRange&) = delete;
+	};
+	class ImageCopy:
+		public VkImageCopy
+	{
+	public:
+		inline ImageCopy() = delete;
+		inline ImageCopy(
+			const VkImageSubresourceLayers& srcSubresource_,
+			const VkOffset3D& srcOffset_,
+			const VkImageSubresourceLayers& dstSubresource_,
+			const VkOffset3D& dstOffset_,
+			const VkExtent3D& extent_
+		);
+		inline ImageCopy(const ImageCopy&) = delete;
+		inline ~ImageCopy() = default;
+	public:
+		inline ImageCopy& operator = (const ImageCopy&) = delete;
+	};
+	class ImageSubresourceLayers:
+		public VkImageSubresourceLayers
+	{
+	public:
+		inline ImageSubresourceLayers() = delete;
+		inline ImageSubresourceLayers(
+			const VkImageAspectFlags& aspectMask_,
+			const uint32_t& mipLevel_,
+			const uint32_t& baseArrayLayer_,
+			const uint32_t& layerCount_
+		);
+		inline ImageSubresourceLayers(const ImageSubresourceLayers&) = delete;
+		inline ~ImageSubresourceLayers() = default;
+	public:
+		inline ImageSubresourceLayers& operator = (const ImageSubresourceLayers&) = delete;
+	};
+	class ImageSubresource:
+		public VkImageSubresource
+	{
+	public:
+		inline ImageSubresource() = delete;
+		inline ImageSubresource(
+			const VkImageAspectFlags& aspectMask_,
+			const uint32_t& mipLevel_,
+			const uint32_t& arrayLayer_
+		);
+		inline ImageSubresource(const ImageSubresource&) = delete;
+		inline ~ImageSubresource() = default;
+	public:
+		inline ImageSubresource& operator = (const ImageSubresource&) = delete;
+	};
+	class ImageMemoryBarrier:
+		public VkImageMemoryBarrier
+	{
+	public:
+		inline ImageMemoryBarrier() = delete;
+		inline ImageMemoryBarrier(
+			const VkAccessFlags& vk_sourceAccessMask_,
+			const VkAccessFlags& vk_destinationAccessMask_,
+			const VkImageLayout& vk_oldLayout_,
+			const VkImageLayout& vk_newLayout_,
+			const uint32_t& sourceQueueFamilyIndex_,
+			const uint32_t& destinationQueueFamilyIndex_,
+			const VkImage& vk_image_,
+			const VkImageSubresourceRange& vk_imageSubresourceRange_
+		);
+		inline ImageMemoryBarrier(const ImageMemoryBarrier&) = delete;
+		inline ~ImageMemoryBarrier() = default;
+	public:
+		inline ImageMemoryBarrier& operator = (const ImageMemoryBarrier&) = delete;
 	};
 
 #if VK_USE_PLATFORM_WIN32_KHR
@@ -861,6 +1040,8 @@ namespace GreatVulkan
 	inline VkPhysicalDeviceProperties GetPhysicalDeviceProperties(const VkPhysicalDevice& vk_physicalDevice_);
 	inline Vector<VkQueueFamilyProperties> GetPhysicalDeviceQueueFamilyProperties(const VkPhysicalDevice& vk_physicalDevice_);
 	inline VkPhysicalDeviceMemoryProperties GetPhysicalDeviceMemoryProperties(const VkPhysicalDevice& vk_physicalDevice_);
+	inline VkFormatProperties GetPhysicalDeviceFormatProperties(const VkPhysicalDevice& vk_physicalDevice_, const VkFormat& vk_format_);
+	inline VkImageFormatProperties GetPhysicalDeviceImageFormatProperties(const VkPhysicalDevice& vk_physicalDevice_, const VkFormat& vk_format_, const VkImageType& vk_imageType_, const VkImageTiling& vk_imageTiling_, const VkImageUsageFlags& vk_imageUsage_, const VkImageCreateFlags& vk_imageCreateFlags_);
 
 	// Device
 	inline Vector<VkLayerProperties> EnumerateDeviceLayerProperties(const VkPhysicalDevice& vk_physicalDevice_);
@@ -930,6 +1111,8 @@ namespace GreatVulkan
 	inline void	CmdDrawIndexed(const VkCommandBuffer& vk_commandBuffer_, const uint32_t& indexCount_, const uint32_t& instanceCount_, const uint32_t& firstIndex_, const int32_t& vertexOffset_, const uint32_t& firstInstance_);
 	template<class T>
 	inline void CmdPushConstants(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineLayout& vk_pipelineLayout_, const VkShaderStageFlags& stageFlags_, const uint32_t& offset_, const Vector<T>& values_);
+	inline void CmdCopyImage(const VkCommandBuffer& vk_commandBuffer_, const VkImage& vk_sourceImage_, const VkImageLayout& vk_sourceImageLayout_, const VkImage& vk_destinationImage_, const VkImageLayout& vk_destinationImageLayout_, const Vector<VkImageCopy>& vk_imageCopies_);
+	inline void CmdPipelineBarrier(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineStageFlags& vk_sourceFlags_, const VkPipelineStageFlags& vk_destinationFlags_, const VkDependencyFlags& vk_dependencyFlags_, const Vector<VkMemoryBarrier>& vk_memoryBarriers_, const Vector<VkBufferMemoryBarrier>& vk_bufferMemoryBarriers_, const Vector<VkImageMemoryBarrier>& vk_imageMemoryBarriers_);
 
 	// Fence
 	inline VkFence CreateFence(const VkDevice& vk_device_, const VkFenceCreateInfo& vk_fenceCreateInfo_);
@@ -940,7 +1123,7 @@ namespace GreatVulkan
 	// Buffer
 	inline VkBuffer CreateBuffer(const VkDevice& vk_device_, const VkBufferCreateInfo& vk_bufferCreateInfo_);
 	inline VkMemoryRequirements GetBufferMemoryRequirements(const VkDevice& vk_device_, const VkBuffer& vk_buffer_);
-	inline void BindBufferMemory(const VkDevice& vk_device_, const VkBuffer& vk_buffer_, const VkDeviceMemory& vk_deviceMemory_);
+	inline void BindBufferMemory(const VkDevice& vk_device_, const VkBuffer& vk_buffer_, const VkDeviceMemory& vk_deviceMemory_ = 0);
 	inline void DestroyBuffer(const VkDevice& vk_device_, const VkBuffer& vk_buffer_);
 
 	// Device Memory
@@ -973,6 +1156,17 @@ namespace GreatVulkan
 	inline Vector<VkDescriptorSet> AllocateDescriptorSets(const VkDevice& vk_device_, const VkDescriptorSetAllocateInfo& vk_descriptorSetAllocateInfo_);
 	inline void UpdateDescriptorSets(const VkDevice& vk_device_, const Vector<VkWriteDescriptorSet> vk_writeDescriptorSets_, const Vector<VkCopyDescriptorSet>& vk_copyDescriptorSet_);
 	inline void FreeDescriptorSets(const VkDevice& vk_device_, const VkDescriptorPool& vk_descriptorPool_, const Vector<VkDescriptorSet>& vk_descriptorSets_);
+
+	// Image
+	inline VkImage CreateImage(const VkDevice& vk_device_, const VkImageCreateInfo& vk_imageCreateInfo_);
+	inline VkMemoryRequirements GetImageMemoryRequirements(const VkDevice& vk_device_, const VkImage& vk_image_);
+	inline void BindImageMemory(const VkDevice& vk_device_, const VkImage& vk_image_, const VkDeviceMemory& vk_deviceMemory_, const VkDeviceSize& offset_ = 0);
+	inline void DestroyImage(const VkDevice& vk_device_, const VkImage& vk_image_);
+	inline VkSubresourceLayout GetImageSubresourceLayout(const VkDevice& vk_device_, const VkImage& vk_image_, const VkImageSubresource& vk_imageSubresource_);
+
+	// Sampler
+	inline VkSampler CreateSampler(const VkDevice& vk_device_, const VkSamplerCreateInfo& vk_samplerCreateInfo_);
+	inline void DestroySampler(const VkDevice& vk_device_, const VkSampler& vk_sampler_);
 }
 
 
@@ -1366,6 +1560,97 @@ inline GreatVulkan::DescriptorSetLayoutCreateInfo::DescriptorSetLayoutCreateInfo
 
 #pragma endregion
 
+#pragma region ImageCreateInfo
+
+inline GreatVulkan::ImageCreateInfo::ImageCreateInfo(
+	const VkImageCreateFlags& flags_,
+	const VkImageType& vk_imageType_,
+	const VkFormat& vk_format_,
+	const VkExtent3D& vk_extent_,
+	const uint32_t& mipLevels_,
+	const uint32_t& arrayLayers_,
+	const VkSampleCountFlagBits& vk_samples_,
+	const VkImageTiling& vk_tiling_,
+	const VkImageUsageFlags& vk_usage_,
+	const VkImageLayout& vk_initialLayout_
+): ImageCreateInfo(flags_, vk_imageType_, vk_format_, vk_extent_, mipLevels_, arrayLayers_, vk_samples_, vk_tiling_, vk_usage_, VkSharingMode::VK_SHARING_MODE_EXCLUSIVE, {}, vk_initialLayout_)
+{
+}
+inline GreatVulkan::ImageCreateInfo::ImageCreateInfo(
+	const VkImageCreateFlags& flags_,
+	const VkImageType& vk_imageType_,
+	const VkFormat& vk_format_,
+	const VkExtent3D& vk_extent_,
+	const uint32_t& mipLevels_,
+	const uint32_t& arrayLayers_,
+	const VkSampleCountFlagBits& vk_samples_,
+	const VkImageTiling& vk_tiling_,
+	const VkImageUsageFlags& vk_usage_,
+	const VkSharingMode& vk_sharingMode_,
+	const Vector<uint32_t>& queueFamilyIndices_,
+	const VkImageLayout& vk_initialLayout_
+) {
+	sType					= VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	pNext					= nullptr;
+	flags					= flags_;
+	imageType				= vk_imageType_;
+	format					= vk_format_;
+	extent					= vk_extent_;
+	mipLevels				= mipLevels_;
+	arrayLayers				= arrayLayers_;
+	samples					= vk_samples_;
+	tiling					= vk_tiling_;
+	usage					= vk_usage_;
+	sharingMode				= vk_sharingMode_;
+	queueFamilyIndexCount	= queueFamilyIndices_.size();
+	pQueueFamilyIndices		= queueFamilyIndices_.data();
+	initialLayout			= vk_initialLayout_;
+}
+
+#pragma endregion
+
+#pragma region SamplerCreateInfo
+
+inline GreatVulkan::SamplerCreateInfo::SamplerCreateInfo(
+	const VkFilter& magnificationFilter_,
+	const VkFilter& minificationFilter_,
+	const VkSamplerMipmapMode& mipmapMode_,
+    const VkSamplerAddressMode& addressModeU_,
+    const VkSamplerAddressMode& addressModeV_,
+    const VkSamplerAddressMode& addressModeW_,
+	const float& mipmapLodBias_,
+	const VkBool32 isAnisotropyEnabled_,
+    const float& maxAnisotropy_,
+    const VkBool32& isCompareEnabled_,
+    const VkCompareOp& compareOp_,
+    const float& minLod_,
+    const float& maxLod_,
+    const VkBorderColor& borderColor_,
+    const VkBool32& isUnnormalizedCoordinates_
+) {
+    sType					= VkStructureType::VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    pNext					= nullptr;
+    flags					= 0;
+    magFilter				= magnificationFilter_;
+    minFilter				= minificationFilter_;
+    mipmapMode				= mipmapMode_;
+    addressModeU			= addressModeU_;
+    addressModeV			= addressModeV_;
+    addressModeW			= addressModeW_;
+    mipLodBias				= mipmapLodBias_;
+    anisotropyEnable		= isAnisotropyEnabled_;
+    maxAnisotropy			= maxAnisotropy_;
+    compareEnable			= isCompareEnabled_;
+    compareOp				= compareOp_;
+    minLod					= minLod_;
+    maxLod					= maxLod_;
+    borderColor				= borderColor_;
+    unnormalizedCoordinates	= isUnnormalizedCoordinates_;
+}
+
+#pragma endregion
+
+
 #pragma region PipelineShaderStageCreateInfo
 
 inline GreatVulkan::PipelineShaderStageCreateInfo::PipelineShaderStageCreateInfo(
@@ -1693,6 +1978,17 @@ inline GreatVulkan::SubmitInfo::SubmitInfo(const Vector<VkCommandBuffer>& vk_com
 
 #pragma endregion
 
+#pragma region DescriptorImageInfo
+
+inline GreatVulkan::DescriptorImageInfo::DescriptorImageInfo(const VkSampler& vk_sampler_, const VkImageView& vk_imageView_, const VkImageLayout& vk_imageLayout_)
+{
+	sampler = vk_sampler_;
+	imageView = vk_imageView_;
+	imageLayout = vk_imageLayout_;
+}
+
+#pragma endregion
+
 #pragma region DescriptorBufferInfo
 
 inline GreatVulkan::DescriptorBufferInfo::DescriptorBufferInfo(const VkBuffer& vk_buffer_, const VkDeviceSize& offset_, const VkDeviceSize& range_)
@@ -1730,12 +2026,34 @@ inline GreatVulkan::Offset2D::Offset2D(const X& x_, const Y& y_)
 
 #pragma endregion
 
-#pragma region Offset2D
+#pragma region Offset3D
+
+inline GreatVulkan::Offset3D::Offset3D(const X& x_, const Y& y_, const Z& z_)
+{
+	x = x_;
+	y = y_;
+	z = z_;
+}
+
+#pragma endregion
+
+#pragma region Extent2D
 
 inline GreatVulkan::Extent2D::Extent2D(const Width& width_, const Height& height_)
 {
 	width = width_;
 	height = height_;
+}
+
+#pragma endregion
+
+#pragma region Extent3D
+
+inline GreatVulkan::Extent3D::Extent3D(const Width& width_, const Height& height_, const Depth& depth_)
+{
+	width = width_;
+	height = height_;
+	depth = depth_;
 }
 
 #pragma endregion
@@ -1992,6 +2310,24 @@ inline GreatVulkan::WriteDescriptorSet::WriteDescriptorSet(
 	const uint32_t& binding_,
 	const uint32_t& first_,
 	const VkDescriptorType& vk_descriptorType_,
+	const Vector<VkDescriptorImageInfo>& vk_descriptorImageInfo_
+) {
+    sType				= VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    pNext				= nullptr;
+    dstSet				= vk_descriptorSet_;
+    dstBinding			= binding_;
+    dstArrayElement		= first_;
+    descriptorCount		= vk_descriptorImageInfo_.size();
+    descriptorType		= vk_descriptorType_;
+    pImageInfo			= vk_descriptorImageInfo_.data();
+    pBufferInfo			= nullptr;
+    pTexelBufferView	= nullptr;
+}
+inline GreatVulkan::WriteDescriptorSet::WriteDescriptorSet(
+	const VkDescriptorSet& vk_descriptorSet_,
+	const uint32_t& binding_,
+	const uint32_t& first_,
+	const VkDescriptorType& vk_descriptorType_,
 	const Vector<VkDescriptorBufferInfo>& vk_descriptorBufferInfos_
 ) {
     sType				= VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -2015,6 +2351,81 @@ inline GreatVulkan::PushConstantRange::PushConstantRange(const VkShaderStageFlag
 	stageFlags = stageFlags_;
 	offset = offset_;
 	size = size_;
+}
+
+#pragma endregion
+
+#pragma region ImageCopy
+
+inline GreatVulkan::ImageCopy::ImageCopy(
+	const VkImageSubresourceLayers& srcSubresource_,
+	const VkOffset3D& srcOffset_,
+	const VkImageSubresourceLayers& dstSubresource_,
+	const VkOffset3D& dstOffset_,
+	const VkExtent3D& extent_
+)
+{
+	srcSubresource = srcSubresource_;
+	srcOffset = srcOffset_;
+	dstSubresource = dstSubresource_;
+	dstOffset = dstOffset_;
+	extent = extent_;
+}
+
+#pragma endregion
+
+#pragma region ImageSubresourceLayers
+
+inline GreatVulkan::ImageSubresourceLayers::ImageSubresourceLayers(
+    const VkImageAspectFlags& aspectMask_,
+	const uint32_t& mipLevel_,
+	const uint32_t& baseArrayLayer_,
+    const uint32_t& layerCount_
+) {
+	aspectMask		= aspectMask_;
+	mipLevel		= mipLevel_;
+	baseArrayLayer	= baseArrayLayer_;
+	layerCount		= layerCount_;
+}
+
+#pragma endregion
+
+#pragma region ImageSubresource
+
+inline GreatVulkan::ImageSubresource::ImageSubresource(
+	const VkImageAspectFlags& aspectMask_,
+	const uint32_t& mipLevel_,
+	const uint32_t& arrayLayer_
+) {
+	aspectMask		= aspectMask_;
+	mipLevel		= mipLevel_;
+	arrayLayer		= arrayLayer_;
+}
+
+#pragma endregion
+
+#pragma region ImageMemoryBarrier
+
+inline GreatVulkan::ImageMemoryBarrier::ImageMemoryBarrier(
+	const VkAccessFlags& vk_sourceAccessMask_,
+	const VkAccessFlags& vk_destinationAccessMask_,
+	const VkImageLayout& vk_oldLayout_,
+	const VkImageLayout& vk_newLayout_,
+	const uint32_t& sourceQueueFamilyIndex_,
+	const uint32_t& destinationQueueFamilyIndex_,
+	const VkImage& vk_image_,
+	const VkImageSubresourceRange& vk_imageSubresourceRange_
+) {
+    /*VkStructureType            */sType				= VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    /*const void*                */pNext				= nullptr;
+    /*VkAccessFlags              */srcAccessMask		= vk_sourceAccessMask_;
+    /*VkAccessFlags              */dstAccessMask		= vk_destinationAccessMask_;
+    /*VkImageLayout              */oldLayout			= vk_oldLayout_;
+    /*VkImageLayout              */newLayout			= vk_newLayout_;
+    /*uint32_t                   */srcQueueFamilyIndex	= sourceQueueFamilyIndex_;
+    /*uint32_t                   */dstQueueFamilyIndex	= destinationQueueFamilyIndex_; // VK_QUEUE_FAMILY_IGNORED
+    /*VkImage                    */image				= vk_image_;
+    /*VkImageSubresourceRange    */subresourceRange		= vk_imageSubresourceRange_;
 }
 
 #pragma endregion
@@ -2186,6 +2597,22 @@ inline VkPhysicalDeviceMemoryProperties GreatVulkan::GetPhysicalDeviceMemoryProp
 	vkGetPhysicalDeviceMemoryProperties(vk_physicalDevice_, &vk_physicalDeviceMemoryProperties);
 
 	return Move(vk_physicalDeviceMemoryProperties);
+}
+inline VkFormatProperties GreatVulkan::GetPhysicalDeviceFormatProperties(const VkPhysicalDevice& vk_physicalDevice_, const VkFormat& vk_format_)
+{
+	VkFormatProperties vk_formatProperties;
+
+	vkGetPhysicalDeviceFormatProperties(vk_physicalDevice_, vk_format_, &vk_formatProperties);
+
+	return vk_formatProperties;
+}
+inline VkImageFormatProperties GreatVulkan::GetPhysicalDeviceImageFormatProperties(const VkPhysicalDevice& vk_physicalDevice_, const VkFormat& vk_format_, const VkImageType& vk_imageType_, const VkImageTiling& vk_imageTiling_, const VkImageUsageFlags& vk_imageUsage_, const VkImageCreateFlags& vk_imageCreateFlags_)
+{
+	VkImageFormatProperties vk_imageFormatProperties;
+
+	vkGetPhysicalDeviceImageFormatProperties(vk_physicalDevice_, vk_format_, vk_imageType_, vk_imageTiling_, vk_imageUsage_, vk_imageCreateFlags_, &vk_imageFormatProperties);
+
+	return vk_imageFormatProperties;
 }
 
 // Device
@@ -2630,6 +3057,14 @@ inline void GreatVulkan::CmdPushConstants(const VkCommandBuffer& vk_commandBuffe
 {
 	vkCmdPushConstants(vk_commandBuffer_, vk_pipelineLayout_, stageFlags_, offset_, sizeof(T) * values_.size(), values_.data());
 }
+inline void GreatVulkan::CmdCopyImage(const VkCommandBuffer& vk_commandBuffer_, const VkImage& vk_sourceImage_, const VkImageLayout& vk_sourceImageLayout_, const VkImage& vk_destinationImage_, const VkImageLayout& vk_destinationImageLayout_, const Vector<VkImageCopy>& vk_imageCopies_)
+{
+	vkCmdCopyImage(vk_commandBuffer_, vk_sourceImage_, vk_sourceImageLayout_, vk_destinationImage_, vk_destinationImageLayout_, vk_imageCopies_.size(), vk_imageCopies_.data());
+}
+inline void GreatVulkan::CmdPipelineBarrier(const VkCommandBuffer& vk_commandBuffer_, const VkPipelineStageFlags& vk_sourceFlags_, const VkPipelineStageFlags& vk_destinationFlags_, const VkDependencyFlags& vk_dependencyFlags_, const Vector<VkMemoryBarrier>& vk_memoryBarriers_, const Vector<VkBufferMemoryBarrier>& vk_bufferMemoryBarriers_, const Vector<VkImageMemoryBarrier>& vk_imageMemoryBarriers_)
+{
+	vkCmdPipelineBarrier(vk_commandBuffer_, vk_sourceFlags_, vk_destinationFlags_, vk_dependencyFlags_, vk_memoryBarriers_.size(), vk_memoryBarriers_.data(), vk_bufferMemoryBarriers_.size(), vk_bufferMemoryBarriers_.data(), vk_imageMemoryBarriers_.size(), vk_imageMemoryBarriers_.data());
+}
 
 // Fence
 inline VkFence GreatVulkan::CreateFence(const VkDevice& vk_device_, const VkFenceCreateInfo& vk_fenceCreateInfo_)
@@ -2860,6 +3295,67 @@ inline void GreatVulkan::UpdateDescriptorSets(const VkDevice& vk_device_, const 
 inline void GreatVulkan::FreeDescriptorSets(const VkDevice& vk_device_, const VkDescriptorPool& vk_descriptorPool_, const Vector<VkDescriptorSet>& vk_descriptorSets_)
 {
 	vkFreeDescriptorSets(vk_device_, vk_descriptorPool_, vk_descriptorSets_.size(), vk_descriptorSets_.data());
+}
+
+// Image
+inline VkImage GreatVulkan::CreateImage(const VkDevice& vk_device_, const VkImageCreateInfo& vk_imageCreateInfo_)
+{
+	VkImage vk_image;
+
+	if (auto result = Result(vkCreateImage(vk_device_, &vk_imageCreateInfo_, nullptr, &vk_image)))
+	{
+		return vk_image;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline VkMemoryRequirements GreatVulkan::GetImageMemoryRequirements(const VkDevice& vk_device_, const VkImage& vk_image_)
+{
+	VkMemoryRequirements vk_memoryRequirements;
+
+	vkGetImageMemoryRequirements(vk_device_, vk_image_, &vk_memoryRequirements);
+
+	return vk_memoryRequirements;
+}
+inline void GreatVulkan::BindImageMemory(const VkDevice& vk_device_, const VkImage& vk_image_, const VkDeviceMemory& vk_deviceMemory_, const VkDeviceSize& offset_)
+{
+	if (auto result = Result(vkBindImageMemory(vk_device_, vk_image_, vk_deviceMemory_, offset_))); else
+	{
+		throw Exception();
+	}
+}
+inline void GreatVulkan::DestroyImage(const VkDevice& vk_device_, const VkImage& vk_image_)
+{
+	vkDestroyImage(vk_device_, vk_image_, nullptr);
+}
+inline VkSubresourceLayout GreatVulkan::GetImageSubresourceLayout(const VkDevice& vk_device_, const VkImage& vk_image_, const VkImageSubresource& vk_imageSubresource_)
+{
+	VkSubresourceLayout vk_subresourceLayout;
+
+	vkGetImageSubresourceLayout(vk_device_, vk_image_, &vk_imageSubresource_, &vk_subresourceLayout);
+
+	return vk_subresourceLayout;
+}
+
+// Sampler
+inline VkSampler GreatVulkan::CreateSampler(const VkDevice& vk_device_, const VkSamplerCreateInfo& vk_samplerCreateInfo_)
+{
+	VkSampler vk_sampler;
+
+	if (auto result = Result(vkCreateSampler(vk_device_, &vk_samplerCreateInfo_, nullptr, &vk_sampler)))
+	{
+		return vk_sampler;
+	}
+	else
+	{
+		throw Exception();
+	}
+}
+inline void GreatVulkan::DestroySampler(const VkDevice& vk_device_, const VkSampler& vk_sampler_)
+{
+	vkDestroySampler(vk_device_, vk_sampler_, nullptr);
 }
 
 #pragma endregion
