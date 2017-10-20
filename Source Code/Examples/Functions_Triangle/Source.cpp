@@ -273,7 +273,7 @@ void func()
 			getDeviceMemoryIndex(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
 		));
 
-		auto data = MapMemory(vk_device, vk_deviceMemory, 0, 1, 0);
+		auto data = MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0);
 
 		std::memcpy(data, vertices.data(), verticesMemoryTotalSize);
 
