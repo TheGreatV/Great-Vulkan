@@ -27,6 +27,17 @@ inline glm::mat4 rotateX(const glm::float32& angle_)
 		0.0f,	s,		c,		0.0f,
 		0.0f,	0.0f,	0.0f,	1.0f));
 }
+inline glm::mat3 rotateX3(const glm::float32& angle_)
+{
+	auto a = glm::radians(angle_);
+	auto s = glm::sin(a);
+	auto c = glm::cos(a);
+
+	return glm::transpose(glm::mat3(
+		1.0f,	0.0f,	0.0f,
+		0.0f,	c,		-s,	
+		0.0f,	s,		c));
+}
 inline glm::mat4 rotateY(const glm::float32& angle_)
 {
 	auto a = glm::radians(angle_);
@@ -38,6 +49,17 @@ inline glm::mat4 rotateY(const glm::float32& angle_)
 		0.0f,	1.0f,	0.0f,	0.0f,
 		-s,		0.0f,	c,		0.0f,
 		0.0f,	0.0f,	0.0f,	1.0f));
+}
+inline glm::mat3 rotateY3(const glm::float32& angle_)
+{
+	auto a = glm::radians(angle_);
+	auto s = glm::sin(a);
+	auto c = glm::cos(a);
+
+	return glm::transpose(glm::mat3(
+		c,		0.0f,	s,		
+		0.0f,	1.0f,	0.0f,	
+		-s,		0.0f,	c));
 }
 inline glm::mat4 rotateZ(const glm::float32& angle_)
 {
@@ -51,9 +73,24 @@ inline glm::mat4 rotateZ(const glm::float32& angle_)
 		0.0f,	0.0f,	1.0f,	0.0f,
 		0.0f,	0.0f,	0.0f,	1.0f));
 }
+inline glm::mat3 rotateZ3(const glm::float32& angle_)
+{
+	auto a = glm::radians(angle_);
+	auto s = glm::sin(a);
+	auto c = glm::cos(a);
+
+	return glm::transpose(glm::mat3(
+		c,		s,		0.0f,	
+		-s,		c,		0.0f,	
+		0.0f,	0.0f,	1.0f));
+}
 inline glm::mat4 rotateZXY(const glm::vec3& angle_)
 {
 	return rotateY(angle_.y) * rotateX(angle_.x) * rotateZ(angle_.z);
+}
+inline glm::mat3 rotateZXY3(const glm::vec3& angle_)
+{
+	return rotateY3(angle_.y) * rotateX3(angle_.x) * rotateZ3(angle_.z);
 }
 inline glm::mat4 rotateYXZ(const glm::vec3& angle_)
 {
@@ -88,7 +125,72 @@ inline glm::mat4 perspective(const glm::float32& fov_, const glm::float32& aspec
 		0.0f, 0.0f, -a, b,
 		0.0f, 0.0f, 1.0f, 0.0f));
 }
+inline glm::vec3 xyz(const glm::vec4& xyzw_)
+{
+	return glm::vec3(xyzw_.x, xyzw_.y, xyzw_.z);
+}
 
+
+struct Vertex
+{
+	glm::vec3 pos;
+	glm::vec2 tex;
+	glm::vec3 tan;
+	glm::vec3 bin;
+	glm::vec3 nor;
+};
+struct Mesh
+{
+	Vector<Vertex> vertices;
+	Vector<uint32_t> indices;
+	inline Mesh() = default;
+	inline Mesh(Mesh&& m): vertices(Move(m.vertices)), indices(Move(m.indices))
+	{
+	}
+};
+inline Mesh CreateSphere(const float& radius_, const glm::vec2& tex_, const glm::uvec2& seg_)
+{
+	using namespace glm;
+
+	if(seg_.x < 3 || seg_.y < 3)
+	{
+		throw Exception("Invalid segments count");
+	}
+
+	Mesh mesh;
+	{
+		mesh.vertices.resize((seg_.x + 1)*(seg_.y + 1));
+		mesh.indices.resize(6 * seg_.x*seg_.y);
+	}
+
+	for(Size x = 0; x <= seg_.x; ++x)
+	for(Size y = 0; y <= seg_.y; ++y)
+	{
+		float dx = float(x) / float(seg_.x);
+		float dy = float(y) / float(seg_.y);
+		Size id = y*(seg_.x + 1) + x;
+		auto rMat = rotateZXY3(vec3(90.0f - dy*180.0f, 180.0f - dx*360.0f, 0.0f));
+		mesh.vertices[id].pos = rMat * vec3(0.0f, 0.0f, radius_);
+		mesh.vertices[id].tex = vec2(dx, dy)*tex_;
+		mesh.vertices[id].tan = rMat * vec3(-1.0f, 0.0f, 0.0f);
+		mesh.vertices[id].bin = rMat * vec3(0.0f, 1.0f, 0.0f);
+		mesh.vertices[id].nor = rMat * vec3(0.0f, 0.0f, 1.0f);
+	}
+
+	for(Size x = 0; x < seg_.x; ++x)
+	for(Size y = 0; y < seg_.y; ++y)
+	{
+		Size id = 6 * (y*seg_.x + x);
+		mesh.indices[id + 0] = (y + 0)*(seg_.x + 1) + (x + 0);
+		mesh.indices[id + 1] = (y + 0)*(seg_.x + 1) + (x + 1);
+		mesh.indices[id + 2] = (y + 1)*(seg_.x + 1) + (x + 0);
+		mesh.indices[id + 3] = mesh.indices[id + 1];
+		mesh.indices[id + 4] = (y + 1)*(seg_.x + 1) + (x + 1);
+		mesh.indices[id + 5] = mesh.indices[id + 2];
+	}
+
+	return Move(mesh);
+}
 
 void func()
 {
@@ -161,10 +263,10 @@ void func()
 				for (Size y = 0; y < size; ++y)
 				{
 					Size i = x + y * size; // index in destination mip-level
-					Size si0 = (x + 0) + (y + 0) * sourceSize; // index in source mip-level
-					Size si1 = (x + 1) + (y + 0) * sourceSize; // index in source mip-level
-					Size si2 = (x + 0) + (y + 1) * sourceSize; // index in source mip-level
-					Size si3 = (x + 1) + (y + 1) * sourceSize; // index in source mip-level
+					Size si0 = (x * 2 + 0) + (y * 2 + 0) * sourceSize; // index in source mip-level
+					Size si1 = (x * 2 + 1) + (y * 2 + 0) * sourceSize; // index in source mip-level
+					Size si2 = (x * 2 + 0) + (y * 2 + 1) * sourceSize; // index in source mip-level
+					Size si3 = (x * 2 + 1) + (y * 2 + 1) * sourceSize; // index in source mip-level
 
 					for (Size c = 0; c < components_; ++c)
 					{
@@ -310,7 +412,7 @@ void func()
 			}
 		};
 		
-		addLayer("VK_LAYER_LUNARG_api_dump");
+		// addLayer("VK_LAYER_LUNARG_api_dump");
 		addLayer("VK_LAYER_LUNARG_core_validation");
 		addLayer("VK_LAYER_LUNARG_monitor");
 		addLayer("VK_LAYER_LUNARG_object_tracker");
@@ -465,15 +567,8 @@ void func()
 	}
 
 	// Data
-	struct Vertex
-	{
-		glm::vec3 pos;
-		glm::vec2 tex;
-		glm::vec3 tan;
-		glm::vec3 bin;
-		glm::vec3 nor;
-	};
-	Vector<Vertex> vertices(24);
+	auto mesh = Move(CreateSphere(0.8f, glm::vec2(4.0f, 2.0f), glm::uvec2(64, 32)));
+	/*Vector<Vertex> vertices(24);
 	{
 		vertices[0]		= Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(+1.0f, +0.0f, +0.0f), glm::vec3(+0.0f, +1.0f, +0.0f), glm::vec3(+0.0f, +0.0f, -1.0f)};
 		vertices[1]		= Vertex{glm::vec3(+0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(+1.0f, +0.0f, +0.0f), glm::vec3(+0.0f, +1.0f, +0.0f), glm::vec3(+0.0f, +0.0f, -1.0f)};
@@ -504,10 +599,11 @@ void func()
 		vertices[21]	= Vertex{glm::vec3(+0.5f, +0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(+1.0f, +0.0f, -1.0f), glm::vec3(+0.0f, +0.0f, +1.0f), glm::vec3(+0.0f, +1.0f, +0.0f)};
 		vertices[22]	= Vertex{glm::vec3(-0.5f, +0.5f, +0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(+1.0f, +0.0f, -1.0f), glm::vec3(+0.0f, +0.0f, +1.0f), glm::vec3(+0.0f, +1.0f, +0.0f)};
 		vertices[23]	= Vertex{glm::vec3(+0.5f, +0.5f, +0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(+1.0f, +0.0f, -1.0f), glm::vec3(+0.0f, +0.0f, +1.0f), glm::vec3(+0.0f, +1.0f, +0.0f)};
-	}
+	}*/
+	auto &vertices = mesh.vertices;
 	Size vertexStride = sizeof(Vertex);
 	Size verticesTotalSize = sizeof(Vertex) * vertices.size();
-	Vector<uint32_t> indices(36);
+	/*Vector<uint32_t> indices(36);
 	{
 		indices[0] = 0; indices[1] = 1; indices[2] = 2;
 		indices[3] = 1; indices[4] = 3; indices[5] = 2;
@@ -526,7 +622,8 @@ void func()
 
 		indices[30] = 20; indices[31] = 21; indices[32] = 22;
 		indices[33] = 21; indices[34] = 23; indices[35] = 22;
-	}
+	}*/
+	auto &indices = mesh.indices;
 	Size indicesTotalSize = sizeof(uint32_t) * indices.size();
 	Vector<float> uniforms(16 * 4);
 	Size uniformsTotalSize = sizeof(float)* uniforms.size();
@@ -594,49 +691,187 @@ void func()
 	auto vk_vertexShaderModule = CreateShaderModule(vk_device, ShaderModuleCreateInfo(Move(loadShader("../../../../../Media/Shaders/Functions_Cube/1.spir-v.vs"))));
 	auto vk_fragmentShaderModule = CreateShaderModule(vk_device, ShaderModuleCreateInfo(Move(loadShader("../../../../../Media/Shaders/Functions_Cube/1.spir-v.fs"))));
 
+	// Queue
+	auto vk_queue = GetDeviceQueue(vk_device, 0, 0);
+
+	// Command Pool
+	auto vk_commandPool = CreateCommandPool(vk_device, CommandPoolCreateInfo(VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, 0));
+	{
+		ResetCommandPool(vk_device, vk_commandPool, VkCommandPoolResetFlagBits::VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
+	}
+
+	// mipmap builder
+	auto buildMipmaps = [&](const VkImage& sourceImage, Map<Size, Vector<uint8_t>>& sourceData_, const Size& sourceSize_, const Size& components_)
+	{
+		auto powOf = glm::log2(static_cast<glm::float32_t>(sourceSize_));
+		auto levels = (powOf - glm::floor(powOf)) == 0
+			? (static_cast<Size>(powOf)+1)
+			: throw Exception();
+
+		for (Size level = 0; level < levels; ++level)
+		{
+			Size powOf = levels - 1 - level;
+			Size size = static_cast<Size>(glm::pow(2, powOf));
+
+			auto mipImage = CreateImage(vk_device, ImageCreateInfo(
+				0, VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(size, size, 1), 1, 1,
+				VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkImageTiling::VK_IMAGE_TILING_LINEAR,
+				VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
+			));
+			auto mipImageDeviceMemory = [&]()
+			{
+				auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, mipImage);
+				auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
+					vk_memoryRequirements.size,
+					getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
+				));
+
+				auto vk_imageSubresourceLayout = GetImageSubresourceLayout(vk_device, mipImage, ImageSubresource(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0));
+
+				auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
+				auto &sourceData = sourceData_[level];
+
+				for (Size x = 0; x < size; ++x)
+				{
+					for (Size y = 0; y < size; ++y)
+					{
+						Size i = static_cast<Size>(vk_imageSubresourceLayout.offset) + y * static_cast<Size>(vk_imageSubresourceLayout.rowPitch) + x * 4;
+						Size j = (x + y * size) * components_;
+
+						if (components_ == 3)
+						{
+							data[i + 0] = sourceData[j + 0];
+							data[i + 1] = sourceData[j + 1];
+							data[i + 2] = sourceData[j + 2];
+							data[i + 3] = 255;
+						}
+						else if (components_ == 4)
+						{
+							data[i + 0] = sourceData[j + 0];
+							data[i + 1] = sourceData[j + 1];
+							data[i + 2] = sourceData[j + 2];
+							data[i + 3] = sourceData[j + 3];
+						}
+						else
+						{
+							data[i + 0] = sourceData[j];
+							data[i + 1] = sourceData[j];
+							data[i + 2] = sourceData[j];
+							data[i + 3] = 255;
+						}
+					}
+				}
+
+				UnmapMemory(vk_device, vk_deviceMemory);
+
+				BindImageMemory(vk_device, mipImage, vk_deviceMemory);
+
+				return vk_deviceMemory;
+			}();
+
+			auto mipCommandBuffers = Move(AllocateCommandBuffers(vk_device, CommandBufferAllocateInfo(vk_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)));
+			auto &mipCommandBuffer = mipCommandBuffers[0];
+
+			ResetCommandBuffer(mipCommandBuffer, VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+			BeginCommandBuffer(mipCommandBuffer, CommandBufferBeginInfo(0));
+			
+			CmdPipelineBarrier(mipCommandBuffer, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, 0, {}, {}, {
+				ImageMemoryBarrier(
+					0,
+					VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
+					VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+					VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					0,
+					0,
+					mipImage,
+					ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
+				),
+			});
+			CmdPipelineBarrier(mipCommandBuffer, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, 0, {}, {}, {
+				ImageMemoryBarrier(
+					0,
+					VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT,
+					VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+					VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					0,
+					0,
+					sourceImage,
+					ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, level, 1, 0, 1)
+				),
+			});
+
+			CmdCopyImage(mipCommandBuffer,
+				mipImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				sourceImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				{
+					ImageCopy(
+						ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1),
+						Offset3D(0, 0, 0),
+						ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, level, 0, 1),
+						Offset3D(0, 0, 0),
+						Extent3D(size, size, 1)
+					),
+				}
+			);
+
+			EndCommandBuffer(mipCommandBuffer);
+
+			QueueWaitIdle(vk_queue);
+			QueueSubmit(vk_queue, {SubmitInfo({mipCommandBuffer})});
+			QueueWaitIdle(vk_queue);
+
+			FreeCommandBuffers(vk_device, vk_commandPool, mipCommandBuffers);
+
+			FreeMemory(vk_device, mipImageDeviceMemory);
+			DestroyImage(vk_device, mipImage);
+		}
+
+		auto finalCommandBuffers = Move(AllocateCommandBuffers(vk_device, CommandBufferAllocateInfo(vk_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)));
+		auto &finalCommandBuffer = finalCommandBuffers[0];
+
+		ResetCommandBuffer(finalCommandBuffer, VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+		BeginCommandBuffer(finalCommandBuffer, CommandBufferBeginInfo(0));
+			
+		CmdPipelineBarrier(finalCommandBuffer, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT, 0, {}, {}, {
+			ImageMemoryBarrier(
+				0,
+				VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT,
+				VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				0,
+				0,
+				sourceImage,
+				ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, levels, 0, 1)
+			),
+		});
+
+		EndCommandBuffer(finalCommandBuffer);
+
+		QueueWaitIdle(vk_queue);
+		QueueSubmit(vk_queue, {SubmitInfo({finalCommandBuffer})});
+		QueueWaitIdle(vk_queue);
+
+		FreeCommandBuffers(vk_device, vk_commandPool, finalCommandBuffers);
+	};
+
 	// Images
 	auto imageAlbedoData = Move(loadImage("../../../../../Media/Images/Functions_Cube/Albedo.png"));
-	// auto imageAlbedoMipmaps = generateMipmaps(imageAlbedoData, 2048, 3);
-	auto vk_imageAlbedo = CreateImage(vk_device, ImageCreateInfo(
-		0,
-		VkImageType::VK_IMAGE_TYPE_2D,
-		VkFormat::VK_FORMAT_R8G8B8A8_UNORM,
-		Extent3D(2048, 2048, 1),
-		1,
-		1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-		VkImageTiling::VK_IMAGE_TILING_LINEAR,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
-		VkSharingMode::VK_SHARING_MODE_EXCLUSIVE,
-		{},
-		VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
+	auto imageAlbedoMipmaps = generateMipmaps(imageAlbedoData, 2048, 3);
+	auto vk_imageAlbedo = CreateImage(vk_device, ImageCreateInfo(0,
+		VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(2048, 2048, 1), 12, 1, VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+		VkImageTiling::VK_IMAGE_TILING_OPTIMAL, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
 	));
 	auto vk_imageAlbedoDeviceMemory = [&]()
 	{
 		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, vk_imageAlbedo);
 		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
 			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
+			getDeviceMemoryIndex2(0, vk_memoryRequirements.memoryTypeBits)
 		));
 
-		auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
-
-		for (Size x = 0; x < 2048; ++x)
-		{
-			for (Size y = 0; y < 2048; ++y)
-			{
-				Size i = x + y * 2048;
-
-				data[i * 4 + 0] = imageAlbedoData[i * 3 + 0];
-				data[i * 4 + 1] = imageAlbedoData[i * 3 + 1];
-				data[i * 4 + 2] = imageAlbedoData[i * 3 + 2];
-				data[i * 4 + 3] = 255;
-			}
-		}
-
-		UnmapMemory(vk_device, vk_deviceMemory);
-
 		BindImageMemory(vk_device, vk_imageAlbedo, vk_deviceMemory);
+
+		buildMipmaps(vk_imageAlbedo, imageAlbedoMipmaps, 2048, 3);
 
 		return vk_deviceMemory;
 	}();
@@ -648,50 +883,25 @@ void func()
 			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B,
 			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A
 		),
-		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
+		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 12, 0, 1)
 	));
-	
-	/*auto imageNormalsData = Move(loadImage("../../../../../Media/Images/Functions_Cube/Normals.png"));
-	auto vk_imageNormals = CreateImage(vk_device, ImageCreateInfo(
-		0,
-		VkImageType::VK_IMAGE_TYPE_2D,
-		VkFormat::VK_FORMAT_R8G8B8A8_UNORM,
-		Extent3D(2048, 2048, 1),
-		1,
-		1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-		VkImageTiling::VK_IMAGE_TILING_LINEAR,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
-		VkSharingMode::VK_SHARING_MODE_EXCLUSIVE,
-		{},
-		VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
+	auto imageNormalsData = Move(loadImage("../../../../../Media/Images/Functions_Cube/Normals.png"));
+	auto imageNormalsMipmaps = generateMipmaps(imageNormalsData, 2048, 4);
+	auto vk_imageNormals = CreateImage(vk_device, ImageCreateInfo(0,
+		VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(2048, 2048, 1), 12, 1, VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+		VkImageTiling::VK_IMAGE_TILING_OPTIMAL, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
 	));
 	auto vk_imageNormalsDeviceMemory = [&]()
 	{
 		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, vk_imageNormals);
 		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
 			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
+			getDeviceMemoryIndex2(0, vk_memoryRequirements.memoryTypeBits)
 		));
 
-		auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
-
-		for (Size x = 0; x < 2048; ++x)
-		{
-			for (Size y = 0; y < 2048; ++y)
-			{
-				Size i = x + y * 2048;
-
-				data[i * 4 + 0] = imageNormalsData[i * 4 + 0];
-				data[i * 4 + 1] = imageNormalsData[i * 4 + 1];
-				data[i * 4 + 2] = imageNormalsData[i * 4 + 2];
-				data[i * 4 + 3] = imageNormalsData[i * 4 + 3];
-			}
-		}
-
-		UnmapMemory(vk_device, vk_deviceMemory);
-
 		BindImageMemory(vk_device, vk_imageNormals, vk_deviceMemory);
+
+		buildMipmaps(vk_imageNormals, imageNormalsMipmaps, 2048, 4);
 
 		return vk_deviceMemory;
 	}();
@@ -703,611 +913,49 @@ void func()
 			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B,
 			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A
 		),
-		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
-	));*/
-
-	/*auto imageRoughnessData = Move(loadImage("../../../../../Media/Images/Functions_Cube/Roughness.png"));
-	auto vk_imageRoughness = CreateImage(vk_device, ImageCreateInfo(
-		0,
-		VkImageType::VK_IMAGE_TYPE_2D,
-		VkFormat::VK_FORMAT_R8_UNORM,
-		Extent3D(2048, 2048, 1),
-		1,
-		1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-		VkImageTiling::VK_IMAGE_TILING_LINEAR,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
-		VkSharingMode::VK_SHARING_MODE_EXCLUSIVE,
-		{},
-		VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
+		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 12, 0, 1)
+	));
+	auto imageRoughnessData = Move(loadImage("../../../../../Media/Images/Functions_Cube/Roughness.png"));
+	auto imageRoughnessMipmaps = generateMipmaps(imageRoughnessData, 2048, 1);
+	auto vk_imageRoughness = CreateImage(vk_device, ImageCreateInfo(0,
+		VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(2048, 2048, 1), 12, 1, VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+		VkImageTiling::VK_IMAGE_TILING_OPTIMAL, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
 	));
 	auto vk_imageRoughnessDeviceMemory = [&]()
 	{
 		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, vk_imageRoughness);
 		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
 			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
+			getDeviceMemoryIndex2(0, vk_memoryRequirements.memoryTypeBits)
 		));
 
-		auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
-
-		for (Size x = 0; x < 2048; ++x)
-		{
-			for (Size y = 0; y < 2048; ++y)
-			{
-				Size i = x + y * 2048;
-
-				data[i * 1 + 0] = imageRoughnessData[i * 3 + 0];
-			}
-		}
-
-		UnmapMemory(vk_device, vk_deviceMemory);
-
 		BindImageMemory(vk_device, vk_imageRoughness, vk_deviceMemory);
+
+		buildMipmaps(vk_imageRoughness, imageRoughnessMipmaps, 2048, 1);
 
 		return vk_deviceMemory;
 	}();
 	auto vk_imageViewRoughness = CreateImageView(vk_device, ImageViewCreateInfo(
-		0, vk_imageRoughness, VkImageViewType::VK_IMAGE_VIEW_TYPE_2D, VkFormat::VK_FORMAT_R8_UNORM,
+		0, vk_imageRoughness, VkImageViewType::VK_IMAGE_VIEW_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM,
 		ComponentMapping(
 			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
 			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
 			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
 			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R
 		),
-		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
-	));*/
-
-	/*auto imageOcclusionData = Move(loadImage("../../../../../Media/Images/Functions_Cube/Occlusion.png"));
-	auto vk_imageOcclusion = CreateImage(vk_device, ImageCreateInfo(
-		0,
-		VkImageType::VK_IMAGE_TYPE_2D,
-		VkFormat::VK_FORMAT_R8_UNORM,
-		Extent3D(2048, 2048, 1),
-		1,
-		1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
-		VkImageTiling::VK_IMAGE_TILING_LINEAR,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT,
-		VkSharingMode::VK_SHARING_MODE_EXCLUSIVE,
-		{},
-		VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
+		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 12, 0, 1)
 	));
-	auto vk_imageOcclusionDeviceMemory = [&]()
-	{
-		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, vk_imageOcclusion);
-		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
-			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
-		));
-
-		auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
-
-		for (Size x = 0; x < 2048; ++x)
-		{
-			for (Size y = 0; y < 2048; ++y)
-			{
-				Size i = x + y * 2048;
-
-				data[i * 1 + 0] = imageOcclusionData[i * 3 + 0];
-			}
-		}
-
-		UnmapMemory(vk_device, vk_deviceMemory);
-
-		BindImageMemory(vk_device, vk_imageOcclusion, vk_deviceMemory);
-
-		return vk_deviceMemory;
-	}();
-	auto vk_imageViewOcclusion = CreateImageView(vk_device, ImageViewCreateInfo(
-		0, vk_imageOcclusion, VkImageViewType::VK_IMAGE_VIEW_TYPE_2D, VkFormat::VK_FORMAT_R8_UNORM,
-		ComponentMapping(
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R
-		),
-		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
-	));*/
-
-	// Queue
-	auto vk_queue = GetDeviceQueue(vk_device, 0, 0);
-
-	// Command Pool
-	auto vk_commandPool = CreateCommandPool(vk_device, CommandPoolCreateInfo(VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, 0));
-	{
-		ResetCommandPool(vk_device, vk_commandPool, VkCommandPoolResetFlagBits::VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
-	}
-
+	
 	// TEST
-	GetPhysicalDeviceFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM);
-	GetPhysicalDeviceImageFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, VkImageType::VK_IMAGE_TYPE_2D, VkImageTiling::VK_IMAGE_TILING_LINEAR, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT, 0);
-	GetPhysicalDeviceImageFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, VkImageType::VK_IMAGE_TYPE_2D, VkImageTiling::VK_IMAGE_TILING_OPTIMAL, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0);
-
-	auto testSourceImage = CreateImage(vk_device, ImageCreateInfo(
-		0, VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(4, 4, 1), 1, 1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkImageTiling::VK_IMAGE_TILING_LINEAR,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
-	));
-	auto testSourceImageDeviceMemory = [&]()
-	{
-		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, testSourceImage);
-		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
-			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
-		));
-
-		auto vk_imageSubresourceLayout = GetImageSubresourceLayout(vk_device, testSourceImage, ImageSubresource(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0));
-
-		auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
-
-		// std::memset(data, 0xFF, static_cast<size_t>(vk_memoryRequirements.size));
-		for (Size x = 0; x < 4; ++x)
-		{
-			for (Size y = 0; y < 4; ++y)
-			{
-				Size i = vk_imageSubresourceLayout.offset + y * vk_imageSubresourceLayout.rowPitch + x * 4;
-				
-				data[i + 0] = 255;
-				data[i + 1] = 0;
-				data[i + 2] = 0;
-				data[i + 3] = 255;
-			}
-		}
-
-		UnmapMemory(vk_device, vk_deviceMemory);
-
-		BindImageMemory(vk_device, testSourceImage, vk_deviceMemory);
-
-		return vk_deviceMemory;
-	}();
-	auto testSourceImage2 = CreateImage(vk_device, ImageCreateInfo(
-		0, VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(2, 2, 1), 1, 1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkImageTiling::VK_IMAGE_TILING_LINEAR,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
-	));
-	auto testSourceImageDeviceMemory2 = [&]()
-	{
-		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, testSourceImage2);
-		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
-			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
-		));
-
-		auto vk_imageSubresourceLayout = GetImageSubresourceLayout(vk_device, testSourceImage2, ImageSubresource(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0));
-
-		auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
-
-		// std::memset(data, 0xFF, static_cast<size_t>(vk_memoryRequirements.size));
-		for (Size x = 0; x < 2; ++x)
-		{
-			for (Size y = 0; y < 2; ++y)
-			{
-				Size i = vk_imageSubresourceLayout.offset + y * vk_imageSubresourceLayout.rowPitch + x * 4;
-
-				data[i + 0] = 0;
-				data[i + 1] = 255;
-				data[i + 2] = 0;
-				data[i + 3] = 255;
-			}
-		}
-
-		UnmapMemory(vk_device, vk_deviceMemory);
-
-		BindImageMemory(vk_device, testSourceImage2, vk_deviceMemory);
-
-		return vk_deviceMemory;
-	}();
-	auto testSourceImage3 = CreateImage(vk_device, ImageCreateInfo(
-		0, VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(1, 1, 1), 1, 1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkImageTiling::VK_IMAGE_TILING_LINEAR,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
-	));
-	auto testSourceImageDeviceMemory3 = [&]()
-	{
-		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, testSourceImage3);
-		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
-			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
-		));
-
-		auto vk_imageSubresourceLayout = GetImageSubresourceLayout(vk_device, testSourceImage3, ImageSubresource(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0));
-
-		auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
-
-		for (Size x = 0; x < 1; ++x)
-		{
-			for (Size y = 0; y < 1; ++y)
-			{
-				Size i = vk_imageSubresourceLayout.offset + y * vk_imageSubresourceLayout.rowPitch + x * 4;
-
-				data[i + 0] = 0;
-				data[i + 1] = 0;
-				data[i + 2] = 255;
-				data[i + 3] = 255;
-			}
-		}
-
-		UnmapMemory(vk_device, vk_deviceMemory);
-
-		BindImageMemory(vk_device, testSourceImage3, vk_deviceMemory);
-
-		return vk_deviceMemory;
-	}();
-
-	/*auto testSourceImage = CreateImage(vk_device, ImageCreateInfo(
-		0, VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(4, 4, 1), 1, 1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkImageTiling::VK_IMAGE_TILING_LINEAR,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
-	));
-	auto testSourceImageDeviceMemory = [&]()
-	{
-		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, testSourceImage);
-		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
-			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
-		));
-
-		auto vk_imageSubresourceLayout = GetImageSubresourceLayout(vk_device, testSourceImage, ImageSubresource(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0));
-
-		auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
-
-		for (Size x = 0; x < 4; ++x)
-		{
-			for (Size y = 0; y < 4; ++y)
-			{
-				Size i = vk_imageSubresourceLayout.offset + y * vk_imageSubresourceLayout.rowPitch + x * 4;
-				
-				data[i + 0] = 255;
-				data[i + 1] = 0;
-				data[i + 2] = 0;
-				data[i + 3] = 255;
-			}
-		}
-
-		UnmapMemory(vk_device, vk_deviceMemory);
-
-		BindImageMemory(vk_device, testSourceImage, vk_deviceMemory);
-
-		return vk_deviceMemory;
-	}();*/
-	
-	/*auto testDestinationImage = CreateImage(vk_device, ImageCreateInfo(
-		0, VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(4, 4, 1), 3, 1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
-	));
-	auto testDestinationImageDeviceMemory = [&]()
-	{
-		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, testDestinationImage);
-		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
-			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(0, vk_memoryRequirements.memoryTypeBits)
-		));
-
-		BindImageMemory(vk_device, testDestinationImage, vk_deviceMemory);
-
-		return vk_deviceMemory;
-	}();*/
-	/*auto testDestinationImage = CreateImage(vk_device, ImageCreateInfo(
-		0, VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(4, 4, 1), 1, 1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkImageTiling::VK_IMAGE_TILING_LINEAR,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
-	));
-	auto testDestinationImageDeviceMemory = [&]()
-	{
-		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, testDestinationImage);
-		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
-			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
-		));
-
-		auto vk_imageSubresourceLayout = GetImageSubresourceLayout(vk_device, testDestinationImage, ImageSubresource(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0));
-
-		auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
-
-		// std::memset(data, 0xFF, static_cast<size_t>(vk_memoryRequirements.size));
-		for (Size x = 0; x < 4; ++x)
-		{
-			for (Size y = 0; y < 4; ++y)
-			{
-				Size i = vk_imageSubresourceLayout.offset + y * vk_imageSubresourceLayout.rowPitch + x * 4;
-				
-				data[i + 0] = rand() % 255;
-				data[i + 1] = rand() % 255;
-				data[i + 2] = rand() % 255;
-				data[i + 3] = 255;
-			}
-		}
-
-		UnmapMemory(vk_device, vk_deviceMemory);
-
-		BindImageMemory(vk_device, testDestinationImage, vk_deviceMemory);
-
-		return vk_deviceMemory;
-	}();*/
-	/*auto testDestinationImage = CreateImage(vk_device, ImageCreateInfo(
-		0, VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(4, 4, 1), 1, 1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
-	));
-	auto testDestinationImageDeviceMemory = [&]()
-	{
-		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, testDestinationImage);
-		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
-			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(0, vk_memoryRequirements.memoryTypeBits)
-		));
-
-		// auto vk_imageSubresourceLayout = GetImageSubresourceLayout(vk_device, testSourceImage, ImageSubresource(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0));
-		// 
-		// auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
-		// 
-		// for (Size x = 0; x < 4; ++x)
-		// {
-		// 	for (Size y = 0; y < 4; ++y)
-		// 	{
-		// 		Size i = vk_imageSubresourceLayout.offset + y * vk_imageSubresourceLayout.rowPitch + x * 4;
-		// 		
-		// 		data[i + 0] = 0;
-		// 		data[i + 1] = 255;
-		// 		data[i + 2] = 0;
-		// 		data[i + 3] = 255;
-		// 	}
-		// }
-		// 
-		// UnmapMemory(vk_device, vk_deviceMemory);
-
-		BindImageMemory(vk_device, testDestinationImage, vk_deviceMemory);
-
-		return vk_deviceMemory;
-	}();*/
-	auto testDestinationImage = CreateImage(vk_device, ImageCreateInfo(
-		0, VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(4, 4, 1), 3, 1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkImageTiling::VK_IMAGE_TILING_OPTIMAL,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
-	));
-	auto testDestinationImageDeviceMemory = [&]()
-	{
-		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, testDestinationImage);
-		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
-			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(0, vk_memoryRequirements.memoryTypeBits)
-		));
-
-		BindImageMemory(vk_device, testDestinationImage, vk_deviceMemory);
-
-		return vk_deviceMemory;
-	}();
-	
-	auto testCommandBuffers = Move(AllocateCommandBuffers(vk_device, CommandBufferAllocateInfo(vk_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)));
-	auto &testCommandBuffer = testCommandBuffers[0];
-	{
-		ResetCommandBuffer(testCommandBuffer, VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-		BeginCommandBuffer(testCommandBuffer, CommandBufferBeginInfo(0));
-			
-		// CmdCopyImage(testCommandBuffer,
-		// 	testSourceImage, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL,
-		// 	testDestinationImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		// 	{
-		// 		ImageCopy(
-		// 			ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 0),
-		// 			Offset3D(0, 0, 0),
-		// 			ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 0),
-		// 			Offset3D(0, 0, 0),
-		// 			Extent3D(4, 4, 1)
-		// 		),
-		// 	}
-		// );
-		// CmdCopyImage(testCommandBuffer,
-		// 	testSourceImage2, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL,
-		// 	testDestinationImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		// 	{
-		// 		ImageCopy(
-		// 			ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 0),
-		// 			Offset3D(0, 0, 0),
-		// 			ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 1, 0, 0),
-		// 			Offset3D(0, 0, 0),
-		// 			Extent3D(2, 2, 1)
-		// 		),
-		// 	}
-		// );
-		// CmdCopyImage(testCommandBuffer,
-		// 	testSourceImage3, VkImageLayout::VK_IMAGE_LAYOUT_GENERAL,
-		// 	testDestinationImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		// 	{
-		// 		ImageCopy(
-		// 			ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 0),
-		// 			Offset3D(0, 0, 0),
-		// 			ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 2, 0, 0),
-		// 			Offset3D(0, 0, 0),
-		// 			Extent3D(1, 1, 1)
-		// 		),
-		// 	}
-		// );
-		
-		CmdPipelineBarrier(testCommandBuffer, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
-			0, {}, {},
-			{
-				ImageMemoryBarrier(
-					0,
-					VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
-					VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
-					VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-					0,
-					0,
-					testSourceImage,
-					ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
-				),
-			}
-		);
-		CmdPipelineBarrier(testCommandBuffer, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
-			0, {}, {},
-			{
-				ImageMemoryBarrier(
-					0,
-					VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
-					VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
-					VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-					0,
-					0,
-					testSourceImage2,
-					ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
-				),
-			}
-		);
-		CmdPipelineBarrier(testCommandBuffer, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
-			0, {}, {},
-			{
-				ImageMemoryBarrier(
-					0,
-					VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
-					VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
-					VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-					0,
-					0,
-					testSourceImage3,
-					ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
-				),
-			}
-		);
-		CmdPipelineBarrier(testCommandBuffer, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
-			0, {}, {},
-			{
-				ImageMemoryBarrier(
-					0,
-					VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT,
-					VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
-					VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					0,
-					0,
-					testDestinationImage,
-					ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 3, 0, 1)
-				),
-			}
-		);
-
-		CmdCopyImage(testCommandBuffer,
-			testSourceImage3, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			testDestinationImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			{
-				ImageCopy(
-					ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1),
-					Offset3D(0, 0, 0),
-					ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 2, 0, 1),
-					Offset3D(0, 0, 0),
-					Extent3D(1, 1, 1)
-				),
-			}
-		);
-		CmdCopyImage(testCommandBuffer,
-			testSourceImage2, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			testDestinationImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			{
-				ImageCopy(
-					ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1),
-					Offset3D(0, 0, 0),
-					ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 1, 0, 1),
-					Offset3D(0, 0, 0),
-					Extent3D(2, 2, 1)
-				),
-			}
-		);
-		CmdCopyImage(testCommandBuffer,
-			testSourceImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			testDestinationImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			{
-				ImageCopy(
-					ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1),
-					Offset3D(0, 0, 0),
-					ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1),
-					Offset3D(0, 0, 0),
-					Extent3D(4, 4, 1)
-				),
-			}
-		);
-
-		CmdPipelineBarrier(testCommandBuffer,
-			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
-			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT,
-			0,
-			{},
-			{},
-			{
-				ImageMemoryBarrier(
-					0,
-					0,
-					VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					VkImageLayout::VK_IMAGE_LAYOUT_GENERAL,
-					0,
-					0,
-					testDestinationImage,
-					ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 3, 0, 1)
-				),
-			}
-		);
-
-		EndCommandBuffer(testCommandBuffer);
-
-		QueueWaitIdle(vk_queue);
-		QueueSubmit(vk_queue, {SubmitInfo({testCommandBuffer})});
-		QueueWaitIdle(vk_queue);
-	}
-
-	/*auto testDestinationImage = CreateImage(vk_device, ImageCreateInfo(
-		0, VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(4, 4, 1), 1, 1,
-		VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkImageTiling::VK_IMAGE_TILING_LINEAR,
-		VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
-	));
-	auto testDestinationImageDeviceMemory = [&]()
-	{
-		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, testDestinationImage);
-		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
-			vk_memoryRequirements.size,
-			getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
-		));
-
-		auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
-
-		auto vk_imageSubresourceLayout = GetImageSubresourceLayout(vk_device, testDestinationImage, ImageSubresource(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0));
-
-		for (Size x = 0; x < 4; ++x)
-		{
-			for (Size y = 0; y < 4; ++y)
-			{
-				Size i = vk_imageSubresourceLayout.offset + y * vk_imageSubresourceLayout.rowPitch + x * 4;
-
-				data[i + 0] = rand() % 255;
-				data[i + 1] = rand() % 255;
-				data[i + 2] = rand() % 255;
-				data[i + 3] = 255;
-			}
-		}
-
-		UnmapMemory(vk_device, vk_deviceMemory);
-
-		BindImageMemory(vk_device, testDestinationImage, vk_deviceMemory);
-
-		return vk_deviceMemory;
-	}();*/
-	auto testDestinationImageView = CreateImageView(vk_device, ImageViewCreateInfo(
-		0, testDestinationImage, VkImageViewType::VK_IMAGE_VIEW_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM,
-		ComponentMapping(
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G,
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B,
-			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A
-		),
-		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
-	));
-
-
+	// GetPhysicalDeviceFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM);
+	// GetPhysicalDeviceImageFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, VkImageType::VK_IMAGE_TYPE_2D, VkImageTiling::VK_IMAGE_TILING_LINEAR, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT, 0);
+	// GetPhysicalDeviceImageFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, VkImageType::VK_IMAGE_TYPE_2D, VkImageTiling::VK_IMAGE_TILING_OPTIMAL, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0);
 
 	// Sampler
 	auto vk_sampler = CreateSampler(vk_device, SamplerCreateInfo(
-		VkFilter::VK_FILTER_NEAREST, VkFilter::VK_FILTER_NEAREST, VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR,
+		VkFilter::VK_FILTER_LINEAR, VkFilter::VK_FILTER_LINEAR, VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_LINEAR,
 		VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT, VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT, VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT,
-		0.0f, VK_FALSE, 1.0f, VK_FALSE, VkCompareOp::VK_COMPARE_OP_ALWAYS, 0.0f, 0.0f, VkBorderColor::VK_BORDER_COLOR_INT_OPAQUE_BLACK, VK_FALSE
+		0.0f, VK_FALSE, 1.0f, VK_FALSE, VkCompareOp::VK_COMPARE_OP_ALWAYS, 0.0f, 12.0f, VkBorderColor::VK_BORDER_COLOR_INT_OPAQUE_BLACK, VK_FALSE
 	));
 
 	// RenderPass
@@ -1341,8 +989,8 @@ void func()
 	auto vk_descriptorSetLayout = CreateDescriptorSetLayout(vk_device, DescriptorSetLayoutCreateInfo(0, {
 		DescriptorSetLayoutBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT),
 		DescriptorSetLayoutBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-		// DescriptorSetLayoutBinding(2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-		// DescriptorSetLayoutBinding(3, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
+		DescriptorSetLayoutBinding(2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
+		DescriptorSetLayoutBinding(3, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
 		// DescriptorSetLayoutBinding(4, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
 	}));
 
@@ -1352,12 +1000,9 @@ void func()
 	{
 		UpdateDescriptorSets(vk_device, {
 			WriteDescriptorSet(vk_descriptorSet, 0, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, {DescriptorBufferInfo(vk_uniformBuffer)}),
-
-			WriteDescriptorSet(vk_descriptorSet, 1, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, testDestinationImageView, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
-
-			// WriteDescriptorSet(vk_descriptorSet, 1, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewAlbedo, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
-			// WriteDescriptorSet(vk_descriptorSet, 2, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewNormals, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
-			// WriteDescriptorSet(vk_descriptorSet, 3, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewRoughness, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_descriptorSet, 1, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewAlbedo, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_descriptorSet, 2, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewNormals, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_descriptorSet, 3, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewRoughness, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
 			// WriteDescriptorSet(vk_descriptorSet, 4, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewOcclusion, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
 		}, {});
 	}
@@ -1488,6 +1133,9 @@ void func()
 	// Fence
 	auto vk_fence = CreateFence(vk_device, FenceCreateInfo(0));
 
+	// other stuff
+	auto viewAngle = glm::vec3(32.0f, 0.0f, 0.0f);
+
 	// Main loop
 	while (!GetAsyncKeyState(VK_ESCAPE))
 	{
@@ -1500,15 +1148,32 @@ void func()
 			}
 		}
 
+		if (GetAsyncKeyState(VK_UP))
+		{
+			viewAngle.x += 1.0f;
+		}
+		if (GetAsyncKeyState(VK_DOWN))
+		{
+			viewAngle.x -= 1.0f;
+		}
+		if (GetAsyncKeyState(VK_RIGHT))
+		{
+			viewAngle.y += 1.0f;
+		}
+		if (GetAsyncKeyState(VK_LEFT))
+		{
+			viewAngle.y -= 1.0f;
+		}
+
 		// update uniforms
 		QueueWaitIdle(vk_queue);
 
-		angle += glm::vec3(0.2f, 0.5f, 0.1f);
+		// angle += glm::vec3(0.2f, 0.5f, 0.1f);
+		angle += glm::vec3(0.0f, 0.25f, 0.0f);
 
 		auto modelAngle = angle;
 		auto modelPosition = glm::vec3(0.0f);
-		auto viewAngle = glm::vec3(32.0f, 0.0f, 0.0f);
-		auto viewPosition = glm::vec3(0.0f, 0.8f, -1.5f);
+		auto viewPosition = xyz(rotateZXY(viewAngle) * glm::vec4(0.0f, 0.0f, -2.0f, 1.0f));
 
 		auto rotateMatrix = rotateZXY(angle);
 		auto modelMatrix = move(modelPosition) * rotateMatrix;
@@ -1544,12 +1209,8 @@ void func()
 
 		QueuePresentKHR(vk_queue, PresentInfoKHR({}, {vk_swapchain}, {vk_nextImageIndex}));
 
-		Sleep(1000 / 60);
+		// Sleep(1000 / 60);
 	}
-
-
-	FreeCommandBuffers(vk_device, vk_commandPool, testCommandBuffers);
-
 
 	DestroyFence(vk_device, vk_fence);
 	FreeCommandBuffers(vk_device, vk_commandPool, vk_commandBuffers);
@@ -1562,18 +1223,9 @@ void func()
 	DestroyRenderPass(vk_device, vk_renderPass);
 	DestroySampler(vk_device, vk_sampler);
 	DestroyImageView(vk_device, vk_imageViewAlbedo); FreeMemory(vk_device, vk_imageAlbedoDeviceMemory); DestroyImage(vk_device, vk_imageAlbedo);
-	// DestroyImageView(vk_device, vk_imageViewNormals); FreeMemory(vk_device, vk_imageNormalsDeviceMemory); DestroyImage(vk_device, vk_imageNormals);
-	// DestroyImageView(vk_device, vk_imageViewRoughness); FreeMemory(vk_device, vk_imageRoughnessDeviceMemory); DestroyImage(vk_device, vk_imageRoughness);
+	DestroyImageView(vk_device, vk_imageViewNormals); FreeMemory(vk_device, vk_imageNormalsDeviceMemory); DestroyImage(vk_device, vk_imageNormals);
+	DestroyImageView(vk_device, vk_imageViewRoughness); FreeMemory(vk_device, vk_imageRoughnessDeviceMemory); DestroyImage(vk_device, vk_imageRoughness);
 	// DestroyImageView(vk_device, vk_imageViewOcclusion); FreeMemory(vk_device, vk_imageOcclusionDeviceMemory); DestroyImage(vk_device, vk_imageOcclusion);
-
-
-	FreeMemory(vk_device, testSourceImageDeviceMemory); DestroyImage(vk_device, testSourceImage);
-	FreeMemory(vk_device, testSourceImageDeviceMemory2); DestroyImage(vk_device, testSourceImage2);
-	FreeMemory(vk_device, testSourceImageDeviceMemory3); DestroyImage(vk_device, testSourceImage3);
-	FreeMemory(vk_device, testDestinationImageDeviceMemory); DestroyImage(vk_device, testDestinationImage);
-	DestroyImageView(vk_device, testDestinationImageView);
-
-
 	FreeMemory(vk_device, vk_uniformBufferDeviceMemory); DestroyBuffer(vk_device, vk_uniformBuffer);
 	FreeMemory(vk_device, vk_indexBufferDeviceMemory); DestroyBuffer(vk_device, vk_indexBuffer);
 	FreeMemory(vk_device, vk_vertexBufferDeviceMemory); DestroyBuffer(vk_device, vk_vertexBuffer);

@@ -27,6 +27,10 @@ void main() {
     
     fPos = (modelMatrix * vec4(vPos, 1.0f)).xyz;
     fTex = vTex;
+
+    // mat3 r = mat3(rotateMatrix[0].xyz, rotateMatrix[1].xyz, rotateMatrix[2].xyz);
+    // fTBN = r * mat3(vTan, vBin, vNor);
+    
     fTBN = mat3(
         (rotateMatrix * vec4(vTan, 1.0f)).xyz,
         (rotateMatrix * vec4(vBin, 1.0f)).xyz,

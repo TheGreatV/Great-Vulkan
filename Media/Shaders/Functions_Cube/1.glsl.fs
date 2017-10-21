@@ -4,8 +4,8 @@
 
 
 layout (set = 0, binding = 1) uniform sampler2D imageAlbedo;
-// layout (set = 0, binding = 2) uniform sampler2D imageNormals;
-// layout (set = 0, binding = 3) uniform sampler2D imageRoughness;
+layout (set = 0, binding = 2) uniform sampler2D imageNormals;
+layout (set = 0, binding = 3) uniform sampler2D imageRoughness;
 // layout (set = 0, binding = 4) uniform sampler2D imageOcclusion;
 
 
@@ -27,24 +27,24 @@ float Specular(vec3 normal, vec3 light, vec3 view, float roughness);
 void main() {
 	// oColor = vec4(fTex, 0.0f, 1.0f);
     
-    vec4    dataAlbedo     = textureLod(imageAlbedo, fTex, fTex.x * 2.0f);
-    // vec4    dataAlbedo     = texture(imageAlbedo, fTex);
-    // vec4    dataNormals    = texture(imageNormals, fTex);
-    // vec4    dataRoughnes   = texture(imageRoughness, fTex);
+    vec4    dataAlbedo     = texture(imageAlbedo, fTex);
+    vec4    dataNormals    = texture(imageNormals, fTex);
+    vec4    dataRoughnes   = texture(imageRoughness, fTex);
     // vec4    dataOcclusion  = texture(imageOcclusion, fTex);
     
     vec3    albedo = dataAlbedo.xyz;
-    // vec3    normal = normalize(
-    //     fTBN[0] * (dataNormals.x * 2.0f - 1.0f) +
-    //     fTBN[1] * (dataNormals.y * 2.0f - 1.0f) +
-    //     fTBN[2] * (dataNormals.z * 2.0f - 1.0f)
-    // );
+    vec3    normal = normalize(
+        fTBN[0] * (dataNormals.x * 2.0f - 1.0f) +
+        fTBN[1] * (dataNormals.y * 2.0f - 1.0f) +
+        fTBN[2] * (dataNormals.z * 2.0f - 1.0f)
+    );
     // vec3    normal = normalize(fTBN * (dataNormals.xyz * 2.0f - 1.0f));
     // vec3    normal = fTBN[2];
-    // float   roughness = dataRoughnes.x;
-    // float   occlusion = dataOcclusion.x;
-    // float   metalness = 0.0f;
-    // float   ambient = 0.2f;
+    float   height = dataNormals.w;
+    float   roughness = dataRoughnes.x;
+    float   occlusion = 1.0f; // dataOcclusion.x;
+    float   metalness = 0.0f;
+    float   ambient = 0.2f;
     
     vec3    lightDirection = normalize(vec3(-1.0f, -2.0f, +1.0f));
     // vec3    lightDirection = normalize(vec3(0.0f, -1.0f, -1.0f));
@@ -56,19 +56,19 @@ void main() {
     
 	// float	specularIntensity = pow(max(dot(reflect(lightDirection, normal), view), 0.0f), 128.0f);
 
-	// float	diffuseIntensity = Diffuse(normal, light, view, roughness, ambient * occlusion);
-	// float	specularIntensity = Specular(normal, light, view, roughness);
+	float	diffuseIntensity = Diffuse(normal, light, view, roughness, ambient * occlusion);
+	float	specularIntensity = Specular(normal, light, view, roughness);
 	// float	diffuseIntensity = Diffuse(normal, light, view, roughness, lightAmbient);
 	// float	specularIntensity = Specular(normal, light, view, roughness);
 
-	// float	gloss = 1.0f - roughness;
-	// 
-	// vec4 oDiffuse = vec4((1.0f - gloss) * diffuseIntensity * albedo * vec3(1.0f), 1.0f);
-	// vec4 oSpecular = vec4(gloss * specularIntensity * mix(vec3(1.0f), albedo, metalness) * vec3(1.0f), 1.0f);
-    // 
-    // oColor = vec4(oDiffuse.xyz + oSpecular.xyz, 1.0f);
+	float	gloss = 1.0f - roughness;
+	
+	vec4 oDiffuse = vec4((1.0f - gloss) * diffuseIntensity * albedo * vec3(1.0f), 1.0f);
+	vec4 oSpecular = vec4(gloss * specularIntensity * mix(vec3(1.0f), albedo, metalness) * vec3(1.0f), 1.0f);
+    
+    oColor = vec4(oDiffuse.xyz + oSpecular.xyz, 1.0f);
     // oColor = vec4(albedo * (ambient * occlusion + (1.0f - ambient) * diffuseIntensity) + vec3(specularIntensity), 1.0f);
-    oColor = vec4(albedo, 1.0f);
+    // oColor = vec4(vec3(roughness), 1.0f);
 }
 
 float Fresnel(vec3 normal, vec3 view, float roughness) {
