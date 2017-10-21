@@ -235,6 +235,61 @@ void func()
 
 		return Move(data);
 	};
+	auto loadCubemap = [](const String filename_)
+	{
+		auto handle = ilGenImage();
+		ilBindImage(handle);
+
+		if (ilLoadImage(filename_.c_str()))
+		{
+			auto ilWidth		= ilGetInteger(IL_IMAGE_WIDTH); 
+			auto ilHeight		= ilGetInteger(IL_IMAGE_HEIGHT); 
+			auto ilDepth		= ilGetInteger(IL_IMAGE_DEPTH); 
+			auto ilFormat		= ilGetInteger(IL_IMAGE_FORMAT);  // GL_RGBA
+			auto ilType			= ilGetInteger(IL_IMAGE_TYPE); 
+			auto ilBytes		= ilGetInteger(IL_IMAGE_BYTES_PER_PIXEL); 
+			auto ilBits			= ilGetInteger(IL_IMAGE_BITS_PER_PIXEL); 
+			auto ilMipmaps		= ilGetInteger(IL_NUM_MIPMAPS); 
+
+			Map<Size, Map<Size, Vector<uint8_t>>> data;
+
+			for (Size faceIndex = 0; faceIndex < 6; ++faceIndex)
+			{
+				auto &face = data[faceIndex];
+
+				for (Size mipmapIndex = 0; mipmapIndex < static_cast<Size>(ilMipmaps) + 1; ++mipmapIndex)
+				{
+					ilBindImage(handle);
+					ilActiveFace(faceIndex);
+					ilActiveMipmap(mipmapIndex);
+
+					auto ilOriginMode	= ilGetInteger(IL_IMAGE_ORIGIN); 	// IL_ORIGIN_LOWER_LEFT, IL_ORIGIN_UPPER_LEFT
+
+					// if (ilOriginMode != IL_ORIGIN_LOWER_LEFT)
+					// {
+					// 	iluFlipImage();
+					// }
+
+					auto &mipmap = face[mipmapIndex];
+
+					auto ilWidth	= ilGetInteger(IL_IMAGE_WIDTH);
+					auto ilHeight	= ilGetInteger(IL_IMAGE_HEIGHT);
+					auto ilDepth	= ilGetInteger(IL_IMAGE_DEPTH);
+					auto ilDataSize	= ilGetInteger(IL_IMAGE_SIZE_OF_DATA);
+					auto ilData		= ilGetData();
+
+					mipmap.resize(ilDataSize);
+					std::memcpy(mipmap.data(), ilData, mipmap.size());
+				}
+			}
+
+			return Move(data);
+		}
+		else
+		{
+			throw Exception();
+		}
+	};
 	auto generateMipmaps = [](const Vector<uint8_t>& data_, const Size& size_, const Size& components_)
 	{
 		auto powOf = glm::log2(static_cast<glm::float32_t>(size_));
@@ -851,6 +906,11 @@ void func()
 		FreeCommandBuffers(vk_device, vk_commandPool, finalCommandBuffers);
 	};
 
+	// TEST
+	// GetPhysicalDeviceFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM);
+	// GetPhysicalDeviceImageFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, VkImageType::VK_IMAGE_TYPE_2D, VkImageTiling::VK_IMAGE_TILING_LINEAR, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT, 0);
+	// GetPhysicalDeviceImageFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, VkImageType::VK_IMAGE_TYPE_2D, VkImageTiling::VK_IMAGE_TILING_OPTIMAL, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0);
+
 	// Images
 	auto imageAlbedoData = Move(loadImage("../../../../../Media/Images/Functions_Cube/Albedo.png"));
 	auto imageAlbedoMipmaps = generateMipmaps(imageAlbedoData, 2048, 3);
@@ -942,11 +1002,227 @@ void func()
 		),
 		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 12, 0, 1)
 	));
-	
-	// TEST
-	// GetPhysicalDeviceFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM);
-	// GetPhysicalDeviceImageFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, VkImageType::VK_IMAGE_TYPE_2D, VkImageTiling::VK_IMAGE_TILING_LINEAR, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT, 0);
-	// GetPhysicalDeviceImageFormatProperties(vk_physicalDevice, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, VkImageType::VK_IMAGE_TYPE_2D, VkImageTiling::VK_IMAGE_TILING_OPTIMAL, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0);
+	auto imageMetalnessData = Move(loadImage("../../../../../Media/Images/Functions_Cube/Metalness.png"));
+	auto imageMetalnessMipmaps = generateMipmaps(imageMetalnessData, 2048, 1);
+	auto vk_imageMetalness = CreateImage(vk_device, ImageCreateInfo(0,
+		VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(2048, 2048, 1), 12, 1, VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+		VkImageTiling::VK_IMAGE_TILING_OPTIMAL, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
+	));
+	auto vk_imageMetalnessDeviceMemory = [&]()
+	{
+		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, vk_imageMetalness);
+		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
+			vk_memoryRequirements.size,
+			getDeviceMemoryIndex2(0, vk_memoryRequirements.memoryTypeBits)
+		));
+
+		BindImageMemory(vk_device, vk_imageMetalness, vk_deviceMemory);
+
+		buildMipmaps(vk_imageMetalness, imageMetalnessMipmaps, 2048, 1);
+
+		return vk_deviceMemory;
+	}();
+	auto vk_imageViewMetalness = CreateImageView(vk_device, ImageViewCreateInfo(
+		0, vk_imageMetalness, VkImageViewType::VK_IMAGE_VIEW_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM,
+		ComponentMapping(
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R
+		),
+		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 12, 0, 1)
+	));
+	auto imageOcclusionData = Move(loadImage("../../../../../Media/Images/Functions_Cube/Occlusion.png"));
+	auto imageOcclusionMipmaps = generateMipmaps(imageOcclusionData, 2048, 1);
+	auto vk_imageOcclusion = CreateImage(vk_device, ImageCreateInfo(0,
+		VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(2048, 2048, 1), 12, 1, VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+		VkImageTiling::VK_IMAGE_TILING_OPTIMAL, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
+	));
+	auto vk_imageOcclusionDeviceMemory = [&]()
+	{
+		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, vk_imageOcclusion);
+		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
+			vk_memoryRequirements.size,
+			getDeviceMemoryIndex2(0, vk_memoryRequirements.memoryTypeBits)
+		));
+
+		BindImageMemory(vk_device, vk_imageOcclusion, vk_deviceMemory);
+
+		buildMipmaps(vk_imageOcclusion, imageOcclusionMipmaps, 2048, 1);
+
+		return vk_deviceMemory;
+	}();
+	auto vk_imageViewOcclusion = CreateImageView(vk_device, ImageViewCreateInfo(
+		0, vk_imageOcclusion, VkImageViewType::VK_IMAGE_VIEW_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM,
+		ComponentMapping(
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R
+		),
+		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 12, 0, 1)
+	));
+
+	auto imageEnvironmentData = Move(loadCubemap("../../../../../Media/Images/Functions_Cube/Environment.dds"));
+	auto vk_imageEnvironment = CreateImage(vk_device, ImageCreateInfo(VkImageCreateFlagBits::VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT,
+		VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(1024, 1024, 1), 11, 6, VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+		VkImageTiling::VK_IMAGE_TILING_OPTIMAL, VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
+	));
+	auto vk_imageEnvironmentDeviceMemory = [&]()
+	{
+		auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, vk_imageEnvironment);
+		auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
+			vk_memoryRequirements.size,
+			getDeviceMemoryIndex2(0, vk_memoryRequirements.memoryTypeBits)
+		));
+
+		BindImageMemory(vk_device, vk_imageEnvironment, vk_deviceMemory);
+
+		Size mipmapLevels = 11;
+
+		for (Size faceIndex = 0; faceIndex < 6; ++faceIndex)
+		{
+			for (Size mipmapIndex = 0; mipmapIndex < mipmapLevels; ++mipmapIndex)
+			{
+				Size powOf = mipmapLevels - 1 - mipmapIndex;
+				Size size = static_cast<Size>(glm::pow(2, powOf));
+
+				auto mipImage = CreateImage(vk_device, ImageCreateInfo(0,
+					VkImageType::VK_IMAGE_TYPE_2D, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, Extent3D(size, size, 1), 1, 1,
+					VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT, VkImageTiling::VK_IMAGE_TILING_LINEAR,
+					VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT | VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED
+				));
+				auto mipImageDeviceMemory = [&]()
+				{
+					auto vk_memoryRequirements = GetImageMemoryRequirements(vk_device, mipImage);
+					auto vk_deviceMemory = AllocateMemory(vk_device, MemoryAllocateInfo(
+						vk_memoryRequirements.size,
+						getDeviceMemoryIndex2(VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, vk_memoryRequirements.memoryTypeBits)
+					));
+
+					auto vk_imageSubresourceLayout = GetImageSubresourceLayout(vk_device, mipImage, ImageSubresource(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0));
+
+					auto data = static_cast<uint8_t*>(MapMemory(vk_device, vk_deviceMemory, 0, VK_WHOLE_SIZE, 0));
+					auto &sourceData = imageEnvironmentData[faceIndex][mipmapIndex];
+
+					for (Size x = 0; x < size; ++x)
+					{
+						for (Size y = 0; y < size; ++y)
+						{
+							Size i = static_cast<Size>(vk_imageSubresourceLayout.offset) + y * static_cast<Size>(vk_imageSubresourceLayout.rowPitch) + x * 4;
+							Size j = (x + y * size) * 4;
+
+							data[i + 0] = sourceData[j + 0];
+							data[i + 1] = sourceData[j + 1];
+							data[i + 2] = sourceData[j + 2];
+							data[i + 3] = sourceData[j + 3];
+						}
+					}
+
+					UnmapMemory(vk_device, vk_deviceMemory);
+
+					BindImageMemory(vk_device, mipImage, vk_deviceMemory);
+
+					return vk_deviceMemory;
+				}();
+
+				auto mipCommandBuffers = Move(AllocateCommandBuffers(vk_device, CommandBufferAllocateInfo(vk_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)));
+				auto &mipCommandBuffer = mipCommandBuffers[0];
+
+				ResetCommandBuffer(mipCommandBuffer, VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+				BeginCommandBuffer(mipCommandBuffer, CommandBufferBeginInfo(0));
+			
+				CmdPipelineBarrier(mipCommandBuffer, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, 0, {}, {}, {
+					ImageMemoryBarrier(
+						0,
+						VkAccessFlagBits::VK_ACCESS_TRANSFER_READ_BIT,
+						VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+						VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+						0,
+						0,
+						mipImage,
+						ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1)
+					),
+				});
+				CmdPipelineBarrier(mipCommandBuffer, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, 0, {}, {}, {
+					ImageMemoryBarrier(
+						0,
+						VkAccessFlagBits::VK_ACCESS_TRANSFER_WRITE_BIT,
+						VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+						VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+						0,
+						0,
+						vk_imageEnvironment,
+						ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, mipmapIndex, 1, faceIndex, 1)
+					),
+				});
+
+				CmdCopyImage(mipCommandBuffer,
+					mipImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					vk_imageEnvironment, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					{
+						ImageCopy(
+							ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1),
+							Offset3D(0, 0, 0),
+							ImageSubresourceLayers(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, mipmapIndex, faceIndex, 1),
+							Offset3D(0, 0, 0),
+							Extent3D(size, size, 1)
+						),
+					}
+				);
+
+				EndCommandBuffer(mipCommandBuffer);
+
+				QueueWaitIdle(vk_queue);
+				QueueSubmit(vk_queue, {SubmitInfo({mipCommandBuffer})});
+				QueueWaitIdle(vk_queue);
+
+				FreeCommandBuffers(vk_device, vk_commandPool, mipCommandBuffers);
+
+				FreeMemory(vk_device, mipImageDeviceMemory);
+				DestroyImage(vk_device, mipImage);
+			}
+		}
+
+		auto finalCommandBuffers = Move(AllocateCommandBuffers(vk_device, CommandBufferAllocateInfo(vk_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)));
+		auto &finalCommandBuffer = finalCommandBuffers[0];
+
+		ResetCommandBuffer(finalCommandBuffer, VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+		BeginCommandBuffer(finalCommandBuffer, CommandBufferBeginInfo(0));
+			
+		CmdPipelineBarrier(finalCommandBuffer, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT, 0, {}, {}, {
+			ImageMemoryBarrier(
+				0,
+				VkAccessFlagBits::VK_ACCESS_SHADER_READ_BIT,
+				VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
+				VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				0,
+				0,
+				vk_imageEnvironment,
+				ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, mipmapLevels, 0, 6)
+			),
+		});
+
+		EndCommandBuffer(finalCommandBuffer);
+
+		QueueWaitIdle(vk_queue);
+		QueueSubmit(vk_queue, {SubmitInfo({finalCommandBuffer})});
+		QueueWaitIdle(vk_queue);
+
+		FreeCommandBuffers(vk_device, vk_commandPool, finalCommandBuffers);
+
+		return vk_deviceMemory;
+	}();
+	auto vk_imageViewEnvironment = CreateImageView(vk_device, ImageViewCreateInfo(
+		0, vk_imageEnvironment, VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE, VkFormat::VK_FORMAT_R8G8B8A8_UNORM,
+		ComponentMapping(
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B,
+			VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A
+		),
+		ImageSubresourceRange(VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT, 0, 11, 0, 6)
+	));
 
 	// Sampler
 	auto vk_sampler = CreateSampler(vk_device, SamplerCreateInfo(
@@ -979,7 +1255,7 @@ void func()
 	// Descriptor Pool
 	auto vk_descriptorPool = CreateDescriptorPool(vk_device, DescriptorPoolCreateInfo(VkDescriptorPoolCreateFlagBits::VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT, 1, {
 		DescriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1),
-		DescriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4),
+		DescriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 6),
 	}));
 
 	// Descriptor Set Layout
@@ -988,7 +1264,9 @@ void func()
 		DescriptorSetLayoutBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
 		DescriptorSetLayoutBinding(2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
 		DescriptorSetLayoutBinding(3, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
-		// DescriptorSetLayoutBinding(4, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
+		DescriptorSetLayoutBinding(4, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
+		DescriptorSetLayoutBinding(5, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
+		DescriptorSetLayoutBinding(6, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
 	}));
 
 	// Descriptor Set
@@ -1000,7 +1278,9 @@ void func()
 			WriteDescriptorSet(vk_descriptorSet, 1, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewAlbedo, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
 			WriteDescriptorSet(vk_descriptorSet, 2, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewNormals, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
 			WriteDescriptorSet(vk_descriptorSet, 3, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewRoughness, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
-			// WriteDescriptorSet(vk_descriptorSet, 4, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewOcclusion, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_descriptorSet, 4, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewMetalness, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_descriptorSet, 5, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewOcclusion, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_descriptorSet, 6, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewEnvironment, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
 		}, {});
 	}
 
@@ -1251,7 +1531,9 @@ void func()
 	DestroyImageView(vk_device, vk_imageViewAlbedo); FreeMemory(vk_device, vk_imageAlbedoDeviceMemory); DestroyImage(vk_device, vk_imageAlbedo);
 	DestroyImageView(vk_device, vk_imageViewNormals); FreeMemory(vk_device, vk_imageNormalsDeviceMemory); DestroyImage(vk_device, vk_imageNormals);
 	DestroyImageView(vk_device, vk_imageViewRoughness); FreeMemory(vk_device, vk_imageRoughnessDeviceMemory); DestroyImage(vk_device, vk_imageRoughness);
-	// DestroyImageView(vk_device, vk_imageViewOcclusion); FreeMemory(vk_device, vk_imageOcclusionDeviceMemory); DestroyImage(vk_device, vk_imageOcclusion);
+	DestroyImageView(vk_device, vk_imageViewMetalness); FreeMemory(vk_device, vk_imageMetalnessDeviceMemory); DestroyImage(vk_device, vk_imageMetalness);
+	DestroyImageView(vk_device, vk_imageViewOcclusion); FreeMemory(vk_device, vk_imageOcclusionDeviceMemory); DestroyImage(vk_device, vk_imageOcclusion);
+	DestroyImageView(vk_device, vk_imageViewEnvironment); FreeMemory(vk_device, vk_imageEnvironmentDeviceMemory); DestroyImage(vk_device, vk_imageEnvironment);
 	FreeMemory(vk_device, vk_uniformBufferDeviceMemory); DestroyBuffer(vk_device, vk_uniformBuffer);
 	FreeMemory(vk_device, vk_indexBufferDeviceMemory); DestroyBuffer(vk_device, vk_indexBuffer);
 	FreeMemory(vk_device, vk_vertexBufferDeviceMemory); DestroyBuffer(vk_device, vk_vertexBuffer);
