@@ -291,9 +291,6 @@ void func()
 		return Move(mipmaps);
 	};
 
-	// angle of cube
-	glm::vec3 angle(0.0f);
-
 	// shaders loader
 	auto loadShader = [](const String& filename)
 	{
@@ -1134,6 +1131,9 @@ void func()
 	auto vk_fence = CreateFence(vk_device, FenceCreateInfo(0));
 
 	// other stuff
+	bool isRotatingEnabled = true; bool isRotatingChanged = false;
+	float distance = 2.0f;;
+	auto angle = glm::vec3(0.0f);
 	auto viewAngle = glm::vec3(32.0f, 0.0f, 0.0f);
 
 	// Main loop
@@ -1165,15 +1165,41 @@ void func()
 			viewAngle.y -= 1.0f;
 		}
 
+		if (GetAsyncKeyState(VK_OEM_PLUS))
+		{
+			distance = glm::clamp(distance - 0.1f, 1.0f, 10.0f);
+		}
+		if (GetAsyncKeyState(VK_OEM_MINUS))
+		{
+			distance = glm::clamp(distance + 0.1f, 1.0f, 10.0f);
+		}
+
+		if (GetAsyncKeyState('R'))
+		{
+			if (!isRotatingChanged)
+			{
+				isRotatingEnabled = !isRotatingEnabled;
+
+				isRotatingChanged = true;
+			}
+		}
+		else
+		{
+			isRotatingChanged = false;
+		}
+
 		// update uniforms
 		QueueWaitIdle(vk_queue);
 
 		// angle += glm::vec3(0.2f, 0.5f, 0.1f);
-		angle += glm::vec3(0.0f, 0.25f, 0.0f);
+		if (isRotatingEnabled)
+		{
+			angle += glm::vec3(0.0f, 0.25f, 0.0f);
+		}
 
 		auto modelAngle = angle;
 		auto modelPosition = glm::vec3(0.0f);
-		auto viewPosition = xyz(rotateZXY(viewAngle) * glm::vec4(0.0f, 0.0f, -2.0f, 1.0f));
+		auto viewPosition = xyz(rotateZXY(viewAngle) * glm::vec4(0.0f, 0.0f, -distance, 1.0f));
 
 		auto rotateMatrix = rotateZXY(angle);
 		auto modelMatrix = move(modelPosition) * rotateMatrix;

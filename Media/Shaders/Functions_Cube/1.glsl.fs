@@ -25,11 +25,46 @@ float Specular(vec3 normal, vec3 light, vec3 view, float roughness);
 
 
 void main() {
+    vec3    view = normalize(-fPos);
+    vec3    tangent = normalize(fTBN[0]);
+    vec3    binormal = normalize(fTBN[1]);
+    
+	float	stepsCount = 32.0f;
+	float	stepFactor = 1.0f / stepsCount;
+	float	emboss = 0.08f;
+	float	scale = 1.0f;
+	float	embossScaleFactor = emboss / scale; // 0.1f;
+    
+	vec2	scanDirectionOnMap = vec2( dot(tangent, -view) , dot(binormal, -view) );
+	vec2	scanStepOnMap = embossScaleFactor * stepFactor * scanDirectionOnMap; // 1 step must scan 'stepFactor' part of 'emboss' and corresponding part of 
+	float	scanStepOnHeight = stepFactor;
+    
+	vec2	tex = fTex;
+	vec2	previousTex = tex;
+    
+	float	scanHeight = 1.0f;
+    float   previousHeight = 1.0f;
+	float	currentHeight = texture(imageNormals, tex).w;
+	
+    while(scanHeight > currentHeight) {
+		previousTex = tex;
+        previousHeight = currentHeight;
+        
+		scanHeight -= scanStepOnHeight;
+		tex += scanStepOnMap;
+        
+		currentHeight = texture(imageNormals, tex).w;
+	}
+    
+	float	a = previousHeight, b = currentHeight, x = scanHeight + scanStepOnHeight, y = scanHeight;
+	float	t = (a - x) / ((y - x) - (b - a));
+	tex = mix(previousTex, tex, t);
+
 	// oColor = vec4(fTex, 0.0f, 1.0f);
     
-    vec4    dataAlbedo     = texture(imageAlbedo, fTex);
-    vec4    dataNormals    = texture(imageNormals, fTex);
-    vec4    dataRoughnes   = texture(imageRoughness, fTex);
+    vec4    dataAlbedo     = texture(imageAlbedo, tex);
+    vec4    dataNormals    = texture(imageNormals, tex);
+    vec4    dataRoughnes   = texture(imageRoughness, tex);
     // vec4    dataOcclusion  = texture(imageOcclusion, fTex);
     
     vec3    albedo = dataAlbedo.xyz;
@@ -52,8 +87,6 @@ void main() {
     
     // float   diffuseIntensity = clamp(dot(-lightDirection, normal), 0.0f, 1.0f);
     
-    vec3    view = normalize(-fPos);
-    
 	// float	specularIntensity = pow(max(dot(reflect(lightDirection, normal), view), 0.0f), 128.0f);
 
 	float	diffuseIntensity = Diffuse(normal, light, view, roughness, ambient * occlusion);
@@ -68,7 +101,7 @@ void main() {
     
     oColor = vec4(oDiffuse.xyz + oSpecular.xyz, 1.0f);
     // oColor = vec4(albedo * (ambient * occlusion + (1.0f - ambient) * diffuseIntensity) + vec3(specularIntensity), 1.0f);
-    // oColor = vec4(vec3(roughness), 1.0f);
+    // oColor = vec4(vec3(height), 1.0f);
 }
 
 float Fresnel(vec3 normal, vec3 view, float roughness) {
