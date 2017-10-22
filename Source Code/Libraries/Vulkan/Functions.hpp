@@ -367,6 +367,16 @@ namespace GreatVulkan
 	public:
 		inline SamplerCreateInfo& operator = (const SamplerCreateInfo&) = delete;
 	};
+	class SemaphoreCreateInfo:
+		public VkSemaphoreCreateInfo
+	{
+	public:
+		inline SemaphoreCreateInfo();
+		inline SemaphoreCreateInfo(const SemaphoreCreateInfo&) = delete;
+		inline ~SemaphoreCreateInfo() = default;
+	public:
+		inline SemaphoreCreateInfo& operator = (const SemaphoreCreateInfo&) = delete;
+	};
 
 	class PipelineShaderStageCreateInfo:
 		public VkPipelineShaderStageCreateInfo
@@ -560,7 +570,12 @@ namespace GreatVulkan
 	{
 	public:
 		inline SubmitInfo() = delete;
-		inline SubmitInfo(const Vector<VkCommandBuffer>& vk_commandBuffers_, const Vector<VkSemaphore>& vk_signalSemaphores_ = Vector<VkSemaphore>());
+		inline SubmitInfo(
+			const Vector<VkCommandBuffer>& vk_commandBuffers_,
+			const Vector<VkSemaphore>& vk_waitSemaphores_ = Vector<VkSemaphore>(),
+			const Vector<VkPipelineStageFlags>& vk_waitMasks_ = Vector<VkPipelineStageFlags>(),
+			const Vector<VkSemaphore>& vk_signalSemaphores_ = Vector<VkSemaphore>()
+		);
 		inline SubmitInfo(const SubmitInfo&) = delete;
 		inline ~SubmitInfo() = default;
 	public:
@@ -1120,6 +1135,10 @@ namespace GreatVulkan
 	inline bool WaitForFences(const VkDevice& vk_device_, const Vector<VkFence>& vk_fences_, const VkBool32& waitAll_, const uint64_t timeout_);
 	inline void DestroyFence(const VkDevice& vk_device_, const VkFence& vk_fence_);
 
+	// Semaphore
+	inline VkSemaphore CreateSemaphore(const VkDevice& vk_device_, const VkSemaphoreCreateInfo& vk_semaphoreCreateInfo_);
+	inline void DestroySemaphore(const VkDevice& vk_device_, const VkSemaphore& vk_semaphore_);
+
 	// Buffer
 	inline VkBuffer CreateBuffer(const VkDevice& vk_device_, const VkBufferCreateInfo& vk_bufferCreateInfo_);
 	inline VkMemoryRequirements GetBufferMemoryRequirements(const VkDevice& vk_device_, const VkBuffer& vk_buffer_);
@@ -1540,7 +1559,7 @@ inline GreatVulkan::DescriptorPoolCreateInfo::DescriptorPoolCreateInfo(const VkD
 	sType			= VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	pNext			= nullptr;
 	flags			= VkDescriptorPoolCreateFlagBits::VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-	maxSets			= 1;
+	maxSets			= maxSets_;
 	poolSizeCount	= vk_descriptorPoolSizes_.size();
 	pPoolSizes		= vk_descriptorPoolSizes_.data();
 }
@@ -1646,6 +1665,16 @@ inline GreatVulkan::SamplerCreateInfo::SamplerCreateInfo(
     maxLod					= maxLod_;
     borderColor				= borderColor_;
     unnormalizedCoordinates	= isUnnormalizedCoordinates_;
+}
+
+#pragma endregion
+
+#pragma region SemaphoreCreateInfo
+
+inline GreatVulkan::SemaphoreCreateInfo::SemaphoreCreateInfo() {
+    sType	= VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    pNext	= nullptr;
+	flags	= 0;
 }
 
 #pragma endregion
@@ -1963,13 +1992,17 @@ inline GreatVulkan::RenderPassBeginInfo::RenderPassBeginInfo(const VkRenderPass&
 
 #pragma region SubmitInfo
 
-inline GreatVulkan::SubmitInfo::SubmitInfo(const Vector<VkCommandBuffer>& vk_commandBuffers_, const Vector<VkSemaphore>& vk_signalSemaphores_)
-{
+inline GreatVulkan::SubmitInfo::SubmitInfo(
+	const Vector<VkCommandBuffer>& vk_commandBuffers_,
+	const Vector<VkSemaphore>& vk_waitSemaphores_,
+	const Vector<VkPipelineStageFlags>& vk_waitMasks_,
+	const Vector<VkSemaphore>& vk_signalSemaphores_
+) {
 	sType					= VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	pNext					= nullptr;
-	waitSemaphoreCount		= 0; // TODO: vk_waitSemaphores_.size();
-	pWaitSemaphores			= nullptr; // TODO: vk_waitSemaphores_.data();
-	pWaitDstStageMask		= nullptr; // TODO
+	waitSemaphoreCount		= vk_waitSemaphores_.size();
+	pWaitSemaphores			= vk_waitSemaphores_.data();
+	pWaitDstStageMask		= vk_waitMasks_.data();
 	commandBufferCount		= vk_commandBuffers_.size();
 	pCommandBuffers			= vk_commandBuffers_.data();
 	signalSemaphoreCount	= vk_signalSemaphores_.size();
@@ -3108,6 +3141,25 @@ inline bool GreatVulkan::WaitForFences(const VkDevice& vk_device_, const Vector<
 inline void GreatVulkan::DestroyFence(const VkDevice& vk_device_, const VkFence& vk_fence_)
 {
 	vkDestroyFence(vk_device_, vk_fence_, nullptr);
+}
+
+// Semaphore
+inline VkSemaphore GreatVulkan::CreateSemaphore(const VkDevice& vk_device_, const VkSemaphoreCreateInfo& vk_semaphoreCreateInfo_)
+{
+	VkSemaphore vk_semaphore;
+
+	if (auto result = Result(vkCreateSemaphore(vk_device_, &vk_semaphoreCreateInfo_, nullptr, &vk_semaphore)))
+	{
+		return vk_semaphore;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
+inline void GreatVulkan::DestroySemaphore(const VkDevice& vk_device_, const VkSemaphore& vk_semaphore_)
+{
+	vkDestroySemaphore(vk_device_, vk_semaphore_, nullptr);
 }
 
 // Buffer
