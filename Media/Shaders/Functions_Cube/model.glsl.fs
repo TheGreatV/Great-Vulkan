@@ -92,12 +92,11 @@ void main() {
 	float	diffuseIntensity = Diffuse(normal, light, view, roughness, ambient * occlusion);
 	float	specularIntensity = Specular(normal, light, view, roughness);
 
-    float   r2 = pow(roughness, 2.0f);
-	float	gloss = 1.0f - r2;
+	float	gloss = 1.0f - roughness;
 	
     vec3    reflection = reflect(-view, normal);
     
-    vec4    dataEnvironment = textureLod(imageEnvironment, reflection, r2 * 12.0f);
+    vec4    dataEnvironment = textureLod(imageEnvironment, reflection, pow(roughness, 2.0f) * 12.0f);
     vec3    environment = dataEnvironment.xyz;
 
     float   fresnel = Fresnel(normal, view, roughness);

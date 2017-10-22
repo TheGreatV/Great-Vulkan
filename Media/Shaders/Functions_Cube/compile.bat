@@ -13,6 +13,12 @@ for %%a in (*.glsl.vs) do (
 	glslangValidator.exe !oldName! -S "vert" -V -o !newName!
 ) 
 
+for %%a in (*.glsl.gs) do ( 
+	set oldName=%%a 
+	set newName=!oldName:glsl=spir-v! 
+	glslangValidator.exe !oldName! -S "geom" -V -o !newName!
+) 
+
 for %%a in (*.glsl.fs) do ( 
 	set oldName=%%a 
 	set newName=!oldName:glsl=spir-v! 

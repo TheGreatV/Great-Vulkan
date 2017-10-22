@@ -3,10 +3,15 @@
 
 #define VK_USE_PLATFORM_WIN32_KHR 1
 
+#include <Windows.h>
+
+#ifdef CreateSemaphore
+#undef CreateSemaphore
+#endif
+
 #include <Common/Common.hpp>
 #include <Vulkan/Vulkan.hpp>
 
-#include <Windows.h>
 #include <glm/glm.hpp>
 
 #include <il/il.h>
@@ -124,6 +129,19 @@ inline glm::mat4 perspective(const glm::float32& fov_, const glm::float32& aspec
 		0.0f, f, 0.0f, 0.0f,
 		0.0f, 0.0f, -a, b,
 		0.0f, 0.0f, 1.0f, 0.0f));
+}
+inline glm::mat4 perspectiveInverse(const glm::float32& fov_, const glm::float32& aspect_, const glm::float32& near_, const glm::float32& far_)
+{
+	auto g = glm::radians(fov_);
+	glm::float32 f = 1.0f / tanf(g / 2.0f);
+	glm::float32 a = (far_ + near_) / (near_ - far_);
+	glm::float32 b = (2.0f * far_ * near_) / (near_ - far_);
+
+	return glm::transpose(glm::mat4( // corrected by *(1,1,-1)
+		aspect_ / f,	0.0f,		0.0f,		0.0f,
+		0.0f,			1.0f / f,	0.0f,		0.0f,
+		0.0f,			0.0f,		0.0f,		1.0f,
+		0.0f,			0.0f,		-1.0f / b,	a / b));
 }
 inline glm::vec3 xyz(const glm::vec4& xyzw_)
 {
@@ -527,6 +545,7 @@ void func()
 #endif
 		vk_deviceLayersExtensionsNames,
 		PhysicalDeviceFeatures(Initializer<PhysicalDeviceFeatures::Feature>({
+			PhysicalDeviceFeatures::Feature::GeometryShader,
 		}))
 	));
 
@@ -740,8 +759,12 @@ void func()
 	}();
 
 	// Shaders
-	auto vk_vertexShaderModule = CreateShaderModule(vk_device, ShaderModuleCreateInfo(Move(loadShader("../../../../../Media/Shaders/Functions_Cube/1.spir-v.vs"))));
-	auto vk_fragmentShaderModule = CreateShaderModule(vk_device, ShaderModuleCreateInfo(Move(loadShader("../../../../../Media/Shaders/Functions_Cube/1.spir-v.fs"))));
+	auto vk_objectVertexShaderModule = CreateShaderModule(vk_device, ShaderModuleCreateInfo(Move(loadShader("../../../../../Media/Shaders/Functions_Cube/model.spir-v.vs"))));
+	auto vk_objectFragmentShaderModule = CreateShaderModule(vk_device, ShaderModuleCreateInfo(Move(loadShader("../../../../../Media/Shaders/Functions_Cube/model.spir-v.fs"))));
+
+	auto vk_backgroundVertexShaderModule = CreateShaderModule(vk_device, ShaderModuleCreateInfo(Move(loadShader("../../../../../Media/Shaders/Functions_Cube/background.spir-v.vs"))));
+	auto vk_backgroundGeometryShaderModule = CreateShaderModule(vk_device, ShaderModuleCreateInfo(Move(loadShader("../../../../../Media/Shaders/Functions_Cube/background.spir-v.gs"))));
+	auto vk_backgroundFragmentShaderModule = CreateShaderModule(vk_device, ShaderModuleCreateInfo(Move(loadShader("../../../../../Media/Shaders/Functions_Cube/background.spir-v.fs"))));
 
 	// Queue
 	auto vk_queue = GetDeviceQueue(vk_device, 0, 0);
@@ -1253,13 +1276,13 @@ void func()
 	));
 
 	// Descriptor Pool
-	auto vk_descriptorPool = CreateDescriptorPool(vk_device, DescriptorPoolCreateInfo(VkDescriptorPoolCreateFlagBits::VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT, 1, {
+	auto vk_descriptorPool = CreateDescriptorPool(vk_device, DescriptorPoolCreateInfo(VkDescriptorPoolCreateFlagBits::VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT, 2, {
 		DescriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1),
 		DescriptorPoolSize(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 6),
 	}));
 
 	// Descriptor Set Layout
-	auto vk_descriptorSetLayout = CreateDescriptorSetLayout(vk_device, DescriptorSetLayoutCreateInfo(0, {
+	auto vk_objectDescriptorSetLayout = CreateDescriptorSetLayout(vk_device, DescriptorSetLayoutCreateInfo(0, {
 		DescriptorSetLayoutBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT),
 		DescriptorSetLayoutBinding(1, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
 		DescriptorSetLayoutBinding(2, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
@@ -1268,35 +1291,43 @@ void func()
 		DescriptorSetLayoutBinding(5, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
 		DescriptorSetLayoutBinding(6, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
 	}));
+	auto vk_backgroundDescriptorSetLayout = CreateDescriptorSetLayout(vk_device, DescriptorSetLayoutCreateInfo(0, {
+		DescriptorSetLayoutBinding(0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT),
+	}));
 
 	// Descriptor Set
-	auto vk_descriptorSets = Move(AllocateDescriptorSets(vk_device, DescriptorSetAllocateInfo(vk_descriptorPool, {vk_descriptorSetLayout})));
-	auto &vk_descriptorSet = vk_descriptorSets[0];
+	auto vk_descriptorSets = Move(AllocateDescriptorSets(vk_device, DescriptorSetAllocateInfo(vk_descriptorPool, {vk_objectDescriptorSetLayout, vk_backgroundDescriptorSetLayout})));
+	auto &vk_objectDescriptorSet = vk_descriptorSets[0];
 	{
 		UpdateDescriptorSets(vk_device, {
-			WriteDescriptorSet(vk_descriptorSet, 0, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, {DescriptorBufferInfo(vk_uniformBuffer)}),
-			WriteDescriptorSet(vk_descriptorSet, 1, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewAlbedo, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
-			WriteDescriptorSet(vk_descriptorSet, 2, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewNormals, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
-			WriteDescriptorSet(vk_descriptorSet, 3, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewRoughness, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
-			WriteDescriptorSet(vk_descriptorSet, 4, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewMetalness, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
-			WriteDescriptorSet(vk_descriptorSet, 5, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewOcclusion, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
-			WriteDescriptorSet(vk_descriptorSet, 6, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewEnvironment, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_objectDescriptorSet, 0, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, {DescriptorBufferInfo(vk_uniformBuffer)}),
+			WriteDescriptorSet(vk_objectDescriptorSet, 1, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewAlbedo, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_objectDescriptorSet, 2, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewNormals, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_objectDescriptorSet, 3, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewRoughness, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_objectDescriptorSet, 4, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewMetalness, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_objectDescriptorSet, 5, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewOcclusion, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+			WriteDescriptorSet(vk_objectDescriptorSet, 6, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewEnvironment, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
+		}, {});
+	}
+	auto &vk_backgroundDescriptorSet = vk_descriptorSets[1];
+	{
+		UpdateDescriptorSets(vk_device, {
+			WriteDescriptorSet(vk_backgroundDescriptorSet, 0, 0, VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, {DescriptorImageInfo(vk_sampler, vk_imageViewEnvironment, VkImageLayout::VK_IMAGE_LAYOUT_PREINITIALIZED)}),
 		}, {});
 	}
 
 	// Pipeline Layout
-	auto vk_pipelineLayout = CreatePipelineLayout(vk_device, PipelineLayoutCreateInfo(
-		{vk_descriptorSetLayout},
-		{}
-	));
+	auto vk_objectPipelineLayout = CreatePipelineLayout(vk_device, PipelineLayoutCreateInfo({vk_objectDescriptorSetLayout}, {}));
+	
+	auto vk_backgroundPipelineLayout = CreatePipelineLayout(vk_device, PipelineLayoutCreateInfo({vk_backgroundDescriptorSetLayout}, {PushConstantRange(VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT, 0, sizeof(float)* 16)}));
 
 	// Pipeline
 	auto vk_pipelines = Move(CreateGraphicsPipelines(vk_device, VK_NULL_HANDLE, {
 		GraphicsPipelineCreateInfo(
 			0,
 			{
-				PipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, vk_vertexShaderModule, "main"),
-				PipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, vk_fragmentShaderModule, "main"),
+				PipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, vk_objectVertexShaderModule, "main"),
+				PipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, vk_objectFragmentShaderModule, "main"),
 			},
 			PipelineVertexInputStateCreateInfo(
 				{
@@ -1352,15 +1383,74 @@ void func()
 				},
 				{0.0f, 0.0f, 0.0f, 0.0f}
 			),
-			vk_pipelineLayout,
+			vk_objectPipelineLayout,
+			vk_renderPass,
+			0
+		),
+		GraphicsPipelineCreateInfo(
+			0,
+			{
+				PipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT, vk_backgroundVertexShaderModule, "main"),
+				PipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT, vk_backgroundGeometryShaderModule, "main"),
+				PipelineShaderStageCreateInfo(VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT, vk_backgroundFragmentShaderModule, "main"),
+			},
+			PipelineVertexInputStateCreateInfo({}, {}),
+			PipelineInputAssemblyStateCreateInfo(VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_POINT_LIST, VK_FALSE),
+			PipelineViewportStateCreateInfo(
+				{
+					Viewport(0, 0, static_cast<float>(vk_surfaceCapabilities.currentExtent.width), static_cast<float>(vk_surfaceCapabilities.currentExtent.height), 0.0f, 1.0f),
+				},
+				{
+					Rect2D(Offset2D(0, 0), Extent2D(vk_surfaceCapabilities.currentExtent.width, vk_surfaceCapabilities.currentExtent.height)),
+				}
+			),
+			PipelineRasterizationStateCreateInfo(
+				VK_FALSE, VK_FALSE,
+				VkPolygonMode::VK_POLYGON_MODE_FILL, VkCullModeFlagBits::VK_CULL_MODE_NONE, VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE,
+				VK_FALSE, 0.0f, 0.0f, 0.0f, 1.0f
+			),
+			PipelineMultisampleStateCreateInfo(
+				VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT,
+				VK_FALSE, 0.0f, nullptr, VK_FALSE, VK_FALSE
+			),
+			PipelineDepthStencilStateCreateInfo(
+				VK_FALSE, VK_FALSE, VkCompareOp::VK_COMPARE_OP_ALWAYS, VK_FALSE,
+				VK_FALSE,
+				StencilOpState(VkStencilOp::VK_STENCIL_OP_KEEP, VkStencilOp::VK_STENCIL_OP_KEEP, VkStencilOp::VK_STENCIL_OP_KEEP, VkCompareOp::VK_COMPARE_OP_ALWAYS, 0, 0, 0),
+				StencilOpState(VkStencilOp::VK_STENCIL_OP_KEEP, VkStencilOp::VK_STENCIL_OP_KEEP, VkStencilOp::VK_STENCIL_OP_KEEP, VkCompareOp::VK_COMPARE_OP_ALWAYS, 0, 0, 0),
+				0.0f,
+				0.0f
+			),
+			PipelineColorBlendStateCreateInfo(
+				VK_FALSE, VkLogicOp::VK_LOGIC_OP_CLEAR,
+				{
+					PipelineColorBlendAttachmentState(
+						VK_FALSE,
+						VkBlendFactor::VK_BLEND_FACTOR_ONE,
+						VkBlendFactor::VK_BLEND_FACTOR_ONE,
+						VkBlendOp::VK_BLEND_OP_ADD,
+						VkBlendFactor::VK_BLEND_FACTOR_ONE,
+						VkBlendFactor::VK_BLEND_FACTOR_ONE,
+						VkBlendOp::VK_BLEND_OP_ADD,
+						VkColorComponentFlagBits::VK_COLOR_COMPONENT_R_BIT | VkColorComponentFlagBits::VK_COLOR_COMPONENT_G_BIT | VkColorComponentFlagBits::VK_COLOR_COMPONENT_B_BIT
+					),
+				},
+				{0.0f, 0.0f, 0.0f, 0.0f}
+			),
+			vk_backgroundPipelineLayout,
 			vk_renderPass,
 			0
 		),
 	}));
-	auto &vk_pipeline = vk_pipelines[0];
+	auto &vk_objectPipeline = vk_pipelines[0];
+	auto &vk_backgroundPipeline = vk_pipelines[1];
 
-	DestroyShaderModule(vk_device, vk_vertexShaderModule);
-	DestroyShaderModule(vk_device, vk_fragmentShaderModule);
+	DestroyShaderModule(vk_device, vk_objectVertexShaderModule);
+	DestroyShaderModule(vk_device, vk_objectFragmentShaderModule);
+
+	DestroyShaderModule(vk_device, vk_backgroundVertexShaderModule);
+	DestroyShaderModule(vk_device, vk_backgroundGeometryShaderModule);
+	DestroyShaderModule(vk_device, vk_backgroundFragmentShaderModule);
 
 	// Framebuffers
 	Vector<VkFramebuffer> vk_framebuffers(vk_swapchainImageViews.size());
@@ -1375,6 +1465,9 @@ void func()
 	}
 
 	// Command Buffers
+	auto vk_constantsCommandBuffers = Move(AllocateCommandBuffers(vk_device, CommandBufferAllocateInfo(vk_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)));
+	auto &vk_constantsCommandBuffer = vk_constantsCommandBuffers[0];
+
 	auto vk_commandBuffers = Move(AllocateCommandBuffers(vk_device, CommandBufferAllocateInfo(vk_commandPool, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, vk_framebuffers.size())));
 	{
 		for (Size i = 0; i < vk_commandBuffers.size(); ++i)
@@ -1395,10 +1488,14 @@ void func()
 				VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE
 			);
 
-			CmdBindPipeline(vk_commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
+			CmdBindPipeline(vk_commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, vk_backgroundPipeline);
+			CmdBindDescriptorSets(vk_commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, vk_backgroundPipelineLayout, 0, {vk_backgroundDescriptorSet}, {});
+			CmdDraw(vk_commandBuffer, 1, 1, 0, 0);
+
+			CmdBindPipeline(vk_commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, vk_objectPipeline);
 			CmdBindVertexBuffers(vk_commandBuffer, 0, 1, {vk_vertexBuffer}, {0});
 			CmdBindIndexBuffer(vk_commandBuffer, vk_indexBuffer, 0, VkIndexType::VK_INDEX_TYPE_UINT32);
-			CmdBindDescriptorSets(vk_commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipelineLayout, 0, {vk_descriptorSet}, {});
+			CmdBindDescriptorSets(vk_commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, vk_objectPipelineLayout, 0, {vk_objectDescriptorSet}, {});
 			CmdDrawIndexed(vk_commandBuffer, indices.size(), 1, 0, 0, 0);
 
 			CmdEndRenderPass(vk_commandBuffer);
@@ -1406,6 +1503,9 @@ void func()
 			EndCommandBuffer(vk_commandBuffer);
 		}
 	}
+
+	// Semaphore
+	auto vk_semaphore = CreateSemaphore(vk_device, SemaphoreCreateInfo());
 
 	// Fence
 	auto vk_fence = CreateFence(vk_device, FenceCreateInfo(0));
@@ -1486,6 +1586,7 @@ void func()
 		auto modelMatrix2 = move(-viewPosition) * move(modelPosition) * rotateMatrix;
 		auto viewMatrix = rotateYXZ(-viewAngle) * move(-viewPosition);
 		auto projectionMatrix = perspective(60.0f, 1.0f, 0.1f, 1000.0f) * scale(glm::vec3(1.0f, -1.0f, 1.0f));
+		auto viewProjectionInverseMatrix = rotateZXY(viewAngle) * scale(glm::vec3(1.0f, -1.0f, 1.0f)) * perspectiveInverse(60.0f, 1.0f, 0.1f, 1000.0f);
 
 		auto modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
 
@@ -1508,9 +1609,28 @@ void func()
 		WaitForFences(vk_device, {vk_fence}, VK_FALSE, UINT64_MAX);
 		ResetFences(vk_device, {vk_fence});
 
+		//
+		ResetCommandBuffer(vk_constantsCommandBuffer, VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+		{
+			BeginCommandBuffer(vk_constantsCommandBuffer, CommandBufferBeginInfo(0));
+			
+			Vector<float> data(16);
+			{
+				for (Size i = 0; i < 16; ++i) data[i] = viewProjectionInverseMatrix[i / 4][i % 4];
+			}
+		
+			CmdPushConstants<float>(vk_constantsCommandBuffer, vk_backgroundPipelineLayout, VkShaderStageFlagBits::VK_SHADER_STAGE_GEOMETRY_BIT, 0, data);
+		
+			EndCommandBuffer(vk_constantsCommandBuffer);
+		}
+		//
+
 		auto &vk_commandBuffer = vk_commandBuffers[vk_nextImageIndex];
 
-		QueueSubmit(vk_queue, {SubmitInfo({vk_commandBuffer})});
+		QueueSubmit(vk_queue, {
+			SubmitInfo({vk_constantsCommandBuffer}, {}, {}, {vk_semaphore}),
+			SubmitInfo({vk_commandBuffer}, {vk_semaphore}, {VkPipelineStageFlagBits::VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT}),
+		});
 		QueueWaitIdle(vk_queue);
 
 		QueuePresentKHR(vk_queue, PresentInfoKHR({}, {vk_swapchain}, {vk_nextImageIndex}));
@@ -1518,13 +1638,18 @@ void func()
 		// Sleep(1000 / 60);
 	}
 
+	DestroySemaphore(vk_device, vk_semaphore);
 	DestroyFence(vk_device, vk_fence);
 	FreeCommandBuffers(vk_device, vk_commandPool, vk_commandBuffers);
+	FreeCommandBuffers(vk_device, vk_commandPool, vk_constantsCommandBuffers);
 	DestroyCommandPool(vk_device, vk_commandPool); // TODO: crash when attempting to destroy pool without any buffers allocated
-	DestroyPipeline(vk_device, vk_pipeline);
-	DestroyPipelineLayout(vk_device, vk_pipelineLayout);
+	DestroyPipeline(vk_device, vk_objectPipeline);
+	DestroyPipeline(vk_device, vk_backgroundPipeline);
+	DestroyPipelineLayout(vk_device, vk_objectPipelineLayout);
+	DestroyPipelineLayout(vk_device, vk_backgroundPipelineLayout);
 	FreeDescriptorSets(vk_device, vk_descriptorPool, vk_descriptorSets);
-	DestroyDescriptorSetLayout(vk_device, vk_descriptorSetLayout);
+	DestroyDescriptorSetLayout(vk_device, vk_objectDescriptorSetLayout);
+	DestroyDescriptorSetLayout(vk_device, vk_backgroundDescriptorSetLayout);
 	DestroyDescriptorPool(vk_device, vk_descriptorPool);
 	DestroyRenderPass(vk_device, vk_renderPass);
 	DestroySampler(vk_device, vk_sampler);
