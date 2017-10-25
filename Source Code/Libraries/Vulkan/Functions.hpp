@@ -262,6 +262,21 @@ namespace GreatVulkan
 		inline GraphicsPipelineCreateInfo(
 			const VkPipelineCreateFlags& flags_,
 			const Vector<VkPipelineShaderStageCreateInfo>& vk_stages_,
+			const VkPipelineVertexInputStateCreateInfo& vk_vertexInputState_,
+			const VkPipelineInputAssemblyStateCreateInfo& vk_inputAssemblyState_,
+			const VkPipelineTessellationStateCreateInfo& vk_tessellationState_,
+			const VkPipelineViewportStateCreateInfo& vk_viewportState_,
+			const VkPipelineRasterizationStateCreateInfo& vk_rasterizationState_,
+			const VkPipelineMultisampleStateCreateInfo& vk_multisampleState_,
+			const VkPipelineDepthStencilStateCreateInfo& vk_depthStencilState_,
+			const VkPipelineColorBlendStateCreateInfo& vk_colorBlendState_,
+			const VkPipelineLayout& vk_pipelineLayout_,
+			const VkRenderPass& vk_renderPass_,
+			const uint32_t subpass_
+		);
+		inline GraphicsPipelineCreateInfo(
+			const VkPipelineCreateFlags& flags_,
+			const Vector<VkPipelineShaderStageCreateInfo>& vk_stages_,
 			const VkPipelineVertexInputStateCreateInfo* vk_vertexInputState_,
 			const VkPipelineInputAssemblyStateCreateInfo* vk_inputAssemblyState_,
 			const VkPipelineTessellationStateCreateInfo* vk_tessellationState_,
@@ -428,6 +443,17 @@ namespace GreatVulkan
 		inline ~PipelineViewportStateCreateInfo() = default;
 	public:
 		inline PipelineViewportStateCreateInfo& operator = (const PipelineViewportStateCreateInfo&) = delete;
+	};
+	class PipelineTessellationStateCreateInfo:
+		public VkPipelineTessellationStateCreateInfo
+	{
+	public:
+		inline PipelineTessellationStateCreateInfo() = delete;
+		inline PipelineTessellationStateCreateInfo(const uint32_t& patchControlPoints_);
+		inline PipelineTessellationStateCreateInfo(const PipelineTessellationStateCreateInfo&) = delete;
+		inline ~PipelineTessellationStateCreateInfo() = default;
+	public:
+		inline PipelineTessellationStateCreateInfo& operator = (const PipelineTessellationStateCreateInfo&) = delete;
 	};
 	class PipelineRasterizationStateCreateInfo:
 		public VkPipelineRasterizationStateCreateInfo
@@ -669,6 +695,7 @@ namespace GreatVulkan
 	public:
 		inline Extent3D() = delete;
 		inline Extent3D(const Width& width_, const Height& height_, const Depth& depth_);
+		inline Extent3D(const VkExtent2D& extent_, const Depth& depth_);
 		inline Extent3D(const Extent3D&) = delete;
 		inline ~Extent3D() = default;
 	public:
@@ -710,6 +737,7 @@ namespace GreatVulkan
 	{
 	public:
 		inline static VkClearValue Color(const float& r_, const float& g_, const float& b_, const float& a_);
+		inline static VkClearValue DepthStencil(const float& depth_, const uint32_t& stencil_);
 	public:
 		inline ClearValue() = delete;
 		inline ClearValue(const ClearValue&) = delete;
@@ -832,6 +860,7 @@ namespace GreatVulkan
 	public:
 		inline SubpassDescription() = delete;
 		inline SubpassDescription(const VkPipelineBindPoint& pipelineBindPoint_, const Vector<VkAttachmentReference>& colorAttachments_);
+		inline SubpassDescription(const VkPipelineBindPoint& pipelineBindPoint_, const Vector<VkAttachmentReference>& colorAttachments_, const VkAttachmentReference& depthStencilAttachment_);
 		inline SubpassDescription(
 			const VkPipelineBindPoint& pipelineBindPoint_,
 			const Vector<VkAttachmentReference>& inputAttachments_,
@@ -1160,6 +1189,7 @@ namespace GreatVulkan
 	inline void DestroyPipelineLayout(const VkDevice& vk_device_, const VkPipelineLayout& vk_pipelineLayout_);
 	
 	// Pipeline
+	inline VkPipeline CreateGraphicsPipeline(const VkDevice& vk_device_, const VkPipelineCache& vk_pipelineCache_, const VkGraphicsPipelineCreateInfo& vk_graphicsPipelineCreateInfo_);
 	inline Vector<VkPipeline> CreateGraphicsPipelines(const VkDevice& vk_device_, const VkPipelineCache& vk_pipelineCache_, const Vector<VkGraphicsPipelineCreateInfo>& vk_createInfos_);
 	inline void DestroyPipeline(const VkDevice& vk_device_, const VkPipeline& vk_pipeline_);
 
@@ -1514,6 +1544,40 @@ inline GreatVulkan::GraphicsPipelineCreateInfo::GraphicsPipelineCreateInfo(
 inline GreatVulkan::GraphicsPipelineCreateInfo::GraphicsPipelineCreateInfo(
 	const VkPipelineCreateFlags& flags_,
 	const Vector<VkPipelineShaderStageCreateInfo>& vk_stages_,
+	const VkPipelineVertexInputStateCreateInfo& vk_vertexInputState_,
+	const VkPipelineInputAssemblyStateCreateInfo& vk_inputAssemblyState_,
+	const VkPipelineTessellationStateCreateInfo& vk_tessellationState_,
+	const VkPipelineViewportStateCreateInfo& vk_viewportState_,
+	const VkPipelineRasterizationStateCreateInfo& vk_rasterizationState_,
+	const VkPipelineMultisampleStateCreateInfo& vk_multisampleState_,
+	const VkPipelineDepthStencilStateCreateInfo& vk_depthStencilState_,
+	const VkPipelineColorBlendStateCreateInfo& vk_colorBlendState_,
+	const VkPipelineLayout& vk_pipelineLayout_,
+	const VkRenderPass& vk_renderPass_,
+	const uint32_t subpass_
+): GraphicsPipelineCreateInfo(
+	flags_,
+	vk_stages_,
+	&vk_vertexInputState_,
+	&vk_inputAssemblyState_,
+	&vk_tessellationState_,
+	&vk_viewportState_,
+	&vk_rasterizationState_,
+	&vk_multisampleState_,
+	&vk_depthStencilState_,
+	&vk_colorBlendState_,
+	nullptr,
+	vk_pipelineLayout_,
+	vk_renderPass_,
+	subpass_,
+	VK_NULL_HANDLE,
+	-1
+)
+{
+}
+inline GreatVulkan::GraphicsPipelineCreateInfo::GraphicsPipelineCreateInfo(
+	const VkPipelineCreateFlags& flags_,
+	const Vector<VkPipelineShaderStageCreateInfo>& vk_stages_,
 	const VkPipelineVertexInputStateCreateInfo* vk_vertexInputState_,
 	const VkPipelineInputAssemblyStateCreateInfo* vk_inputAssemblyState_,
 	const VkPipelineTessellationStateCreateInfo* vk_tessellationState_,
@@ -1744,7 +1808,19 @@ inline GreatVulkan::PipelineViewportStateCreateInfo::PipelineViewportStateCreate
 
 #pragma endregion
 
-#pragma region PipelineViewportStateCreateInfo
+#pragma region PipelineTessellationStateCreateInfo
+
+inline GreatVulkan::PipelineTessellationStateCreateInfo::PipelineTessellationStateCreateInfo(const uint32_t& patchControlPoints_)
+{
+    sType				= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+    pNext				= nullptr;
+    flags				= 0;
+    patchControlPoints	= patchControlPoints_;
+}
+
+#pragma endregion
+
+#pragma region PipelineRasterizationStateCreateInfo
 
 inline GreatVulkan::PipelineRasterizationStateCreateInfo::PipelineRasterizationStateCreateInfo(
 	const VkBool32& isDepthClampEnabled_,
@@ -2088,6 +2164,10 @@ inline GreatVulkan::Extent3D::Extent3D(const Width& width_, const Height& height
 	height = height_;
 	depth = depth_;
 }
+inline GreatVulkan::Extent3D::Extent3D(const VkExtent2D& extent_, const Depth& depth_):
+	Extent3D(extent_.width, extent_.height, depth_)
+{
+}
 
 #pragma endregion
 
@@ -2131,6 +2211,15 @@ inline VkClearValue GreatVulkan::ClearValue::Color(const float& r_, const float&
 	vk_clearValue.color.float32[1] = g_;
 	vk_clearValue.color.float32[2] = b_;
 	vk_clearValue.color.float32[3] = a_;
+
+	return vk_clearValue;
+}
+inline VkClearValue GreatVulkan::ClearValue::DepthStencil(const float& depth_, const uint32_t& stencil_)
+{
+	VkClearValue vk_clearValue;
+
+	vk_clearValue.depthStencil.depth = depth_;
+	vk_clearValue.depthStencil.stencil = stencil_;
 
 	return vk_clearValue;
 }
@@ -2262,6 +2351,10 @@ inline GreatVulkan::AttachmentReference::AttachmentReference(const decltype(atta
 
 inline GreatVulkan::SubpassDescription::SubpassDescription(const VkPipelineBindPoint& pipelineBindPoint_, const Vector<VkAttachmentReference>& colorAttachments_):
 	SubpassDescription(pipelineBindPoint_, {}, colorAttachments_, {}, nullptr, {})
+{
+}
+inline GreatVulkan::SubpassDescription::SubpassDescription(const VkPipelineBindPoint& pipelineBindPoint_, const Vector<VkAttachmentReference>& colorAttachments_, const VkAttachmentReference& depthStencilAttachment_):
+	SubpassDescription(pipelineBindPoint_, {}, colorAttachments_, {}, &depthStencilAttachment_, {})
 {
 }
 inline GreatVulkan::SubpassDescription::SubpassDescription(
@@ -3270,6 +3363,19 @@ inline void GreatVulkan::DestroyPipelineLayout(const VkDevice& vk_device_, const
 }
 
 // Pipeline
+inline VkPipeline GreatVulkan::CreateGraphicsPipeline(const VkDevice& vk_device_, const VkPipelineCache& vk_pipelineCache_, const VkGraphicsPipelineCreateInfo& vk_graphicsPipelineCreateInfo_)
+{
+	VkPipeline vk_pipeline;
+	
+	if (auto result = Result(vkCreateGraphicsPipelines(vk_device_, vk_pipelineCache_, 1, &vk_graphicsPipelineCreateInfo_, nullptr, &vk_pipeline)))
+	{
+		return vk_pipeline;
+	}
+	else
+	{
+		throw Exception(); // TODO
+	}
+}
 inline GreatVulkan::Vector<VkPipeline> GreatVulkan::CreateGraphicsPipelines(const VkDevice& vk_device_, const VkPipelineCache& vk_pipelineCache_, const Vector<VkGraphicsPipelineCreateInfo>& vk_createInfos_)
 {
 	Vector<VkPipeline> vk_pipelines(vk_createInfos_.size());
