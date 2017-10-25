@@ -719,7 +719,7 @@ void func()
 
 		return vk_deviceMemory;
 	}();
-	auto vk_indexBuffer = CreateBuffer(vk_device, BufferCreateInfo(0, verticesTotalSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VkSharingMode::VK_SHARING_MODE_EXCLUSIVE));
+	auto vk_indexBuffer = CreateBuffer(vk_device, BufferCreateInfo(0, indicesTotalSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VkSharingMode::VK_SHARING_MODE_EXCLUSIVE));
 	auto vk_indexBufferDeviceMemory = [&]()
 	{
 		auto vk_memoryRequirements = GetBufferMemoryRequirements(vk_device, vk_indexBuffer);
