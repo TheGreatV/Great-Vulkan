@@ -115,33 +115,51 @@ void func()
 
 	// Instance
 	auto vk_instanceLayersProperties = EnumerateInstanceLayerProperties();
-	auto vk_instanceLayersNames = ExtractInstanceLayersNames(vk_instanceLayersProperties);
+	auto vk_instanceLayersNames = Vector<const char*>();
 	{
-		while (true)
+		auto addLayer = [&](const String& layer_)
 		{
-			auto i = std::find_if(vk_instanceLayersNames.begin(), vk_instanceLayersNames.end(), [](const String& a)
+			for (auto &i : vk_instanceLayersProperties)
 			{
-				auto r =
-					// a == "VK_LAYER_LUNARG_api_dump" || // TODO: bug on DestroyCommandPool
+				if (i.layerName == layer_)
+				{
+					vk_instanceLayersNames.push_back(i.layerName);
 
-					a == "VK_LAYER_LUNARG_device_simulation" ||
-					a == "VK_LAYER_LUNARG_standard_validation" ||
-					// a == "VK_LAYER_LUNARG_api_dump" ||
-					a == "VK_LAYER_LUNARG_vktrace";
-
-				return r;
-			});
-
-			if (i == vk_instanceLayersNames.end())
-			{
-				break;
+					return;
+				}
 			}
+		};
 
-			vk_instanceLayersNames.erase(i);
-		}
+		// addLayer("VK_LAYER_LUNARG_api_dump");
+		addLayer("VK_LAYER_LUNARG_core_validation");
+		addLayer("VK_LAYER_LUNARG_monitor");
+		addLayer("VK_LAYER_LUNARG_object_tracker");
+		addLayer("VK_LAYER_LUNARG_parameter_validation");
+		addLayer("VK_LAYER_LUNARG_screenshot");
 	}
 	auto vk_instanceLayersExtensionsProperties = EnumerateInstanceExtensionsProperties(vk_instanceLayersNames + static_cast<const char*>(""));
-	auto vk_instanceLayersExtensionsNames = ExtractInstanceExtensionsNames(vk_instanceLayersExtensionsProperties);
+	auto vk_instanceLayersExtensionsNames = Vector<const char*>();
+	{
+		auto addExtension = [&](const String& extension_)
+		{
+			for (auto &i : vk_instanceLayersExtensionsProperties)
+			{
+				for (auto &j : i.second)
+				{
+					if (j.extensionName == extension_)
+					{
+						vk_instanceLayersExtensionsNames.push_back(j.extensionName);
+
+						return;
+					}
+				}
+			}
+		};
+
+		addExtension(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+		addExtension(VK_KHR_SURFACE_EXTENSION_NAME);
+		addExtension(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+	}
 	auto vk_instance = CreateInstance(InstanceCreateInfo(
 		ApplicationInfo("Application Name", 0, "Engine Name", 0, VK_MAKE_VERSION(1, 0, 61)),
 #if _DEBUG
@@ -334,7 +352,7 @@ void func()
 
 		return vk_deviceMemory;
 	}();
-	auto vk_indexBuffer = CreateBuffer(vk_device, BufferCreateInfo(0, verticesTotalSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VkSharingMode::VK_SHARING_MODE_EXCLUSIVE));
+	auto vk_indexBuffer = CreateBuffer(vk_device, BufferCreateInfo(0, indicesTotalSize, VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VkSharingMode::VK_SHARING_MODE_EXCLUSIVE));
 	auto vk_indexBufferDeviceMemory = [&]()
 	{
 		auto vk_memoryRequirements = GetBufferMemoryRequirements(vk_device, vk_indexBuffer);
