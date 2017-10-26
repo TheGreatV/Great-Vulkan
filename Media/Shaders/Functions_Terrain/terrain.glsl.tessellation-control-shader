@@ -1,0 +1,145 @@
+#version 420 core
+
+
+layout (vertices = 4) out;
+
+
+layout (set = 0, binding = 0) uniform myUniformBuffer {
+    mat4 modelViewProjectionMatrix;
+    vec4 viewPosition;
+};
+
+
+layout (location = 0) in    vec2    tcTex[];
+
+
+layout (location = 0) out   vec2    teTex[];
+
+
+void tessPass2(float range_, int level_) {
+    float height = 1.0f;
+    
+	bool hitNX = viewPosition.x - range_ < gl_in[0].gl_Position.x;
+	bool hitPX = viewPosition.x + range_ > gl_in[2].gl_Position.x;
+	bool hitNZ = viewPosition.z - range_ < gl_in[0].gl_Position.z;
+	bool hitPZ = viewPosition.z + range_ > gl_in[3].gl_Position.z;
+
+	bool hitNY = viewPosition.y - range_ < gl_in[0].gl_Position.y;
+	bool hitPY = viewPosition.y + range_ > gl_in[0].gl_Position.y + height;
+
+    if( hitNZ && hitPZ && hitNX && hitPX )
+    {
+        gl_TessLevelInner[0] = level_;
+        gl_TessLevelInner[1] = level_;
+        gl_TessLevelOuter[0] = level_;
+        gl_TessLevelOuter[1] = level_;
+        gl_TessLevelOuter[2] = level_;
+        gl_TessLevelOuter[3] = level_;
+    }
+    else
+    {
+        if( hitNZ && hitPZ )
+        {
+            if( hitNX && viewPosition.x + range_ > gl_in[0].gl_Position.x ) gl_TessLevelOuter[0] = level_;
+            if( hitPX && viewPosition.x - range_ < gl_in[2].gl_Position.x ) gl_TessLevelOuter[2] = level_;
+        }
+        if( hitNX && hitPX )
+        {
+            if( hitNZ && viewPosition.z + range_ > gl_in[0].gl_Position.z ) gl_TessLevelOuter[1] = level_;
+            if( hitPZ && viewPosition.z - range_ < gl_in[3].gl_Position.z ) gl_TessLevelOuter[3] = level_;
+        }
+    }
+}
+void tessPass(float range_, int level_) {
+    float height = 1.0f;
+    
+    float left      = gl_in[0].gl_Position.x;
+    float right     = gl_in[3].gl_Position.x;
+    float bottom    = gl_in[0].gl_Position.y;
+    float top       = gl_in[3].gl_Position.y + height;
+    float back      = gl_in[0].gl_Position.z;
+    float front     = gl_in[3].gl_Position.z;
+    
+    bool hitFarRight    = viewPosition.x + range_ > right;
+    bool hitFarLeft     = viewPosition.x - range_ < left;
+    bool hitFarFront    = viewPosition.z + range_ > front;
+    bool hitFarBack     = viewPosition.z - range_ < back;
+    
+    bool hitNearRight   = viewPosition.x - range_ < right;
+    bool hitNearLeft    = viewPosition.x + range_ > left;
+    bool hitNearFront   = viewPosition.z - range_ < front;
+    bool hitNearBack    = viewPosition.z + range_ > back;
+    
+    if (hitFarRight && hitFarLeft && hitFarFront && hitFarBack) {
+        gl_TessLevelInner[0] = level_;
+        gl_TessLevelInner[1] = level_;
+        gl_TessLevelOuter[0] = level_;
+        gl_TessLevelOuter[1] = level_;
+        gl_TessLevelOuter[2] = level_;
+        gl_TessLevelOuter[3] = level_;
+    }
+    else {
+        if (hitFarFront && hitFarBack) {
+            if (hitFarLeft && hitNearRight) {
+                gl_TessLevelOuter[1] = level_; // left
+            }
+            if (hitNearLeft && hitFarRight) {
+                gl_TessLevelOuter[3] = level_; // right
+            }
+        }
+        if (hitFarLeft && hitFarRight) {
+            if (hitFarBack && hitNearFront) {
+                gl_TessLevelOuter[0] = level_; // back
+            }
+            if (hitFarFront && hitNearBack) {
+                gl_TessLevelOuter[2] = level_; // front
+            }
+        }
+    }
+    
+	/*bool hitNX = viewPosition.x + range_ > gl_in[0].gl_Position.x;
+	bool hitPX = viewPosition.x - range_ < gl_in[3].gl_Position.x;
+	bool hitNZ = viewPosition.z + range_ > gl_in[0].gl_Position.z;
+	bool hitPZ = viewPosition.z - range_ < gl_in[3].gl_Position.z;
+
+	bool hitNY = viewPosition.y + range_ > gl_in[0].gl_Position.y;
+	bool hitPY = viewPosition.y - range_ < gl_in[0].gl_Position.y + height;
+
+    if(hitNZ && hitPZ && hitNX && hitPX) {
+        gl_TessLevelInner[0] = level_;
+        gl_TessLevelInner[1] = level_;
+        gl_TessLevelOuter[0] = level_;
+        gl_TessLevelOuter[1] = level_;
+        gl_TessLevelOuter[2] = level_;
+        gl_TessLevelOuter[3] = level_;
+    }
+    else {
+        if(hitNZ && hitPZ) {
+            if(hitNX && (viewPosition.x - range_ < gl_in[0].gl_Position.x)) {
+                gl_TessLevelOuter[1] = level_;
+            }
+        }
+    }*/
+}
+
+
+void main()
+{
+	gl_TessLevelInner[0] = 1;
+	gl_TessLevelInner[1] = 1;
+	gl_TessLevelOuter[0] = 1;
+	gl_TessLevelOuter[1] = 1;
+	gl_TessLevelOuter[2] = 1;
+	gl_TessLevelOuter[3] = 1;
+
+    tessPass(500.0f, 2);
+    tessPass(400.0f, 8);
+    tessPass(250.0f, 32);
+    tessPass(100.0f, 128);
+    tessPass(50.0f, 256);
+    
+	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+    
+    teTex[gl_InvocationID] = tcTex[gl_InvocationID];
+}
+
